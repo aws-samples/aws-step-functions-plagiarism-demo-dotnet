@@ -1,0 +1,83 @@
+{
+  "Comment": "Developing with AWS Step Functions Demo",
+  "StartAt": "RegisterIncident",
+  "States": {
+    "RegisterIncident": {
+      "Type": "Task",
+      "Comment": "Register the plagiarism incident in the system and begin workflow execution.",
+      "Resource": "arn:aws:lambda:ap-southeast-2:123456789101:function:developing-with-step-func-RegisterIncidentFunction-1MMI69J0JQ5CO",
+      "Next": "ScheduleExam"
+    },
+    "ScheduleExam": {
+      "Type": "Task",
+      "Comment": "Set the next exam deadline for the student to complete the exam.",
+      "Resource": "arn:aws:lambda:ap-southeast-2:123456789101:function:developing-with-step-function-ScheduleExamFunction-1RFCAZANP9W04",
+      "Next": "SendNotification",
+      "Catch": [
+        {
+          "ErrorEquals": [ "StudentExceededAllowableExamRetries" ],
+          "Next": "TakeAdministrativeAction"
+        }
+      ]
+    },
+    "SendNotification": {
+      "Type": "Task",
+      "Comment": "Send email confirmation to the student with the date the exam completion deadline.",
+      "Resource": "arn:aws:lambda:ap-southeast-2:123456789101:function:developing-with-step-func-SendExamNotificationFunc-CDR7W9D5RMS0",
+      "Next": "ExamConfirmationPending"
+    },
+    "ExamConfirmationPending": {
+      "Type": "Wait",
+      "Comment": "Waiting period exam expiration deadline.",
+      "TimestampPath": "$.Exams[0].ExamDate",
+      "Next": "ValidateExamResults"
+    },
+    "ValidateExamResults": {
+      "Comment": "Validates the exam results.",
+      "Type": "Task",
+      "Resource": "arn:aws:lambda:ap-southeast-2:123456789101:function:developing-with-step-func-ValidateExamResultsFunct-1JQ5BM34S6CIV",
+      "Next": "HasStudentPassedExam"
+    },
+    "HasStudentPassedExam": {
+      "Type": "Choice",
+      "Comment": "If the student has a score less than 67, they need to reschedule",
+      "Choices": [
+        {
+          "Variable": "$.Exams[0].Score",
+          "NumericGreaterThanEquals": 67,
+          "Next": "ResolveIncident"
+        },
+        {
+          "And": [
+            {
+              "Variable": "$.Exams[0].Score",
+              "NumericLessThan": 66
+            },
+            {
+              "Variable": "$.Exams[0].Score",
+              "NumericGreaterThanEquals": 1
+            }
+          ],
+          "Next": "ScheduleExam"
+        },
+        {
+          "Variable": "$.Exams[0].Score",
+          "NumericEquals": 0,
+          "Next": "TakeAdministrativeAction"
+        }
+      ]
+    },
+    "TakeAdministrativeAction": {
+      "Type": "Task",
+      "Resource": "developing-with-step-func-TakeAdministrativeAction-GPSSQQH5N146",
+      "Comment": "Take administrative action if student does not sit exam or fails all three attempts.",
+      "End": true
+    },
+    "ResolveIncident": {
+      "Type": "Task",
+      "Comment": "Resolves the incident for the student.",
+      "End": true,
+      "Resource": "arn:aws:lambda:ap-southeast-2:123456789101:function:developing-with-step-funct-ResolveIncidentFunction-1WOD2GCRY2S2E"
+    }
+  }
+}
