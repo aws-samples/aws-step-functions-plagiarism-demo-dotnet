@@ -4,6 +4,7 @@ using Amazon.DynamoDBv2;
 using Amazon.DynamoDBv2.DocumentModel;
 using Amazon.Lambda.Core;
 using Amazon.Runtime;
+using Amazon.XRay.Recorder.Handlers.AwsSdk;
 using IncidentPersistence;
 using IncidentState;
 
@@ -20,6 +21,7 @@ namespace ResolveIncidentTask
 
         public Function()
         {
+            AWSSDKHandler.RegisterXRayForAllServices();
             _client = new AmazonDynamoDBClient(RegionEndpoint.APSoutheast2);
             _table_name = Environment.GetEnvironmentVariable("TABLE_NAME");
         }

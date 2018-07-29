@@ -1,5 +1,6 @@
 using System;
 using Amazon.Lambda.Core;
+using Amazon.XRay.Recorder.Handlers.AwsSdk;
 using IncidentState;
 
 // Assembly attribute to enable the Lambda function's JSON state to be converted into a .NET class.
@@ -9,6 +10,10 @@ namespace ValidateExamTask
 {
     public class Function
     {
+        public Function()
+        {
+            AWSSDKHandler.RegisterXRayForAllServices();
+        }
 
         /// <summary>
         /// Function to validate the exam result.

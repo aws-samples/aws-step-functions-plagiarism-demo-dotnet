@@ -4,6 +4,7 @@ using Amazon;
 using Amazon.Lambda.Core;
 using Amazon.SimpleNotificationService;
 using Amazon.SimpleNotificationService.Model;
+using Amazon.XRay.Recorder.Handlers.AwsSdk;
 using IncidentState;
 
 // Assembly attribute to enable the Lambda function's JSON input to be converted into a .NET class.
@@ -18,6 +19,7 @@ namespace SendNotificationTask
 
     public Function()
     {
+      AWSSDKHandler.RegisterXRayForAllServices();
       _client = new AmazonSimpleNotificationServiceClient(RegionEndpoint.APSoutheast2);
       _topicArn = Environment.GetEnvironmentVariable("TOPIC_ARN");
     }

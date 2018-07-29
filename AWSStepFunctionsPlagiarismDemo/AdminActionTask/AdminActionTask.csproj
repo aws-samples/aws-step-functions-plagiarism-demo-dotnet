@@ -10,6 +10,8 @@
     <PackageReference Include="Amazon.Lambda.Core" Version="1.0.0" />
     <PackageReference Include="Amazon.Lambda.Serialization.Json" Version="1.3.0" />
     <PackageReference Include="AWSSDK.DynamoDBv2" Version="3.3.10.3" />
+    <PackageReference Include="AWSXRayRecorder.Core" Version="2.2.1-beta" />
+    <PackageReference Include="AWSXRayRecorder.Handlers.AwsSdk" Version="2.2.1-beta" />
   </ItemGroup>
 
   <ItemGroup>

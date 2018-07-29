@@ -1,5 +1,6 @@
 using System;
 using Amazon.Lambda.Core;
+using Amazon.XRay.Recorder.Handlers.AwsSdk;
 using IncidentState;
 
 // Assembly attribute to enable the Lambda function's JSON input to be converted into a .NET class.
@@ -9,6 +10,11 @@ namespace ScheduleExamTask
 {
     public class Function
     {
+
+        public Function()
+        {
+            AWSSDKHandler.RegisterXRayForAllServices();
+        }
 
         /// <summary>
         /// Function to schedule the next exam fr the student.

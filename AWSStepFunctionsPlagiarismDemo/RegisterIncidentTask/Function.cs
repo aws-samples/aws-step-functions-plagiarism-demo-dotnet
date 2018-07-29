@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using Amazon.Lambda.Core;
+using Amazon.XRay.Recorder.Handlers.AwsSdk;
 using IncidentState;
 
 
@@ -11,6 +12,11 @@ namespace RegisterIncidentTask
 {
     public class Function
     {
+        public Function()
+        {
+            AWSSDKHandler.RegisterXRayForAllServices();
+        }
+        
         /// <summary>
         /// A simple function that takes a string and does a ToUpper
         /// </summary>
