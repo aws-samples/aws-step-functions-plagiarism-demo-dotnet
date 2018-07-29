@@ -48,9 +48,7 @@ Resources:
             Description: DevelopingWithDotNetStepFunctions - Send email to administrative staff to notify staff that the student has failed all tests and action needs to be taken.
             CodeUri: ./artifacts/AdminActionTask.zip
             Handler: AdminActionTask::AdminActionTask.Function::FunctionHandler
-            Policies:
-            - DynamoDBCrudPolicy:
-                TableName: !Ref IncidentsTable
+            Role: !Sub ${DynamoDBCrudRole.Arn}
 
     RegisterIncidentFunction:
         Type: AWS::Serverless::Function
@@ -58,9 +56,7 @@ Resources:
             Description: DevelopingWithDotNetStepFunctions - Registers the  incident in the system.
             CodeUri: ./artifacts/RegisterIncidentTask.zip
             Handler: RegisterIncidentTask::RegisterIncidentTask.Function::FunctionHandler
-            Policies:
-            - DynamoDBCrudPolicy:
-                TableName: !Ref IncidentsTable
+            Role: !Sub ${DynamoDBCrudRole.Arn}
 
     ResolveIncidentFunction:
         Type: AWS::Serverless::Function
@@ -68,9 +64,7 @@ Resources:
             Description: DevelopingWithDotNetStepFunctions - Marks the  incident as resolved.
             CodeUri: ./artifacts/ResolveIncidentTask.zip
             Handler: ResolveIncidentTask::ResolveIncidentTask.Function::FunctionHandler
-            Policies:
-            - DynamoDBCrudPolicy:
-                TableName: !Ref IncidentsTable
+            Role: !Sub ${DynamoDBCrudRole.Arn}
 
     ScheduleExamFunction:
         Type: AWS::Serverless::Function
@@ -78,9 +72,7 @@ Resources:
             Description: DevelopingWithDotNetStepFunctions - Schedules the  Exam for the student to complete.
             CodeUri: ./artifacts/ScheduleExamTask.zip
             Handler: ScheduleExamTask::ScheduleExamTask.Function::FunctionHandler
-            Policies:
-            - DynamoDBCrudPolicy:
-                TableName: !Ref IncidentsTable
+            Role: !Sub ${DynamoDBCrudRole.Arn}
 
     SendExamNotificationFunction:
         Type: AWS::Serverless::Function
@@ -89,10 +81,8 @@ Resources:
             CodeUri: ./artifacts/SendNotificationTask.zip
             Handler: SendNotificationTask::SendNotificationTask.Function::FunctionHandler
             Policies:
-            - DynamoDBCrudPolicy:
-                TableName: !Ref IncidentsTable
-            - SNSPublishMessagePolicy:
-                TopicName: !GetAtt DevelopingWithStepFunctionsSNSTopic.TopicName
+                - SNSPublishMessagePolicy:
+                    TopicName: !GetAtt DevelopingWithStepFunctionsSNSTopic.TopicName
             Environment:
                 Variables:
                     TOPIC_ARN: !Ref DevelopingWithStepFunctionsSNSTopic
@@ -104,9 +94,7 @@ Resources:
             Description: DevelopingWithStepFunctions - Validates the exam results.
             CodeUri: ./artifacts/ValidateExamTask.zip
             Handler: ValidateExamTask::ValidateExamTask.Function::FunctionHandler
-            Policies:
-            - DynamoDBCrudPolicy:
-                TableName: !Ref IncidentsTable
+            Role: !Sub ${DynamoDBCrudRole.Arn}
 
 
    ###    ########  #### 
@@ -384,6 +372,44 @@ Resources:
                                     - !Sub ${ValidateExamResultsFunction.Arn}
                                     - !Sub ${ResolveIncidentFunction.Arn}
                                     - !Sub ${TakeAdministrativeActionFunction.Arn}
+    
+    DynamoDBCrudRole:
+        Type: "AWS::IAM::Role"
+        Properties:
+            Path: !Join ["", ["/", !Ref "AWS::StackName", "/"]]
+            ManagedPolicyArns:
+                - "arn:aws:iam::aws:policy/AWSXrayWriteOnlyAccess"
+                - "arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole"
+            AssumeRolePolicyDocument:
+                Version: "2012-10-17"
+                Statement:
+                    -
+                        Sid: "AllowLambdaServiceToAssumeRole"
+                        Effect: "Allow"
+                        Action: 
+                            - "sts:AssumeRole"
+                        Principal:
+                            Service:
+                                - "lambda.amazonaws.com"
+            Policies:
+                -   PolicyName: "AllowCRUDOperationsOnDynamoDB"
+                    PolicyDocument:
+                        Version: '2012-10-17'
+                        Statement:
+                            - 
+                                Effect: "Allow"
+                                Action:
+                                - 'dynamodb:GetItem'
+                                - 'dynamodb:DeleteItem'
+                                - 'dynamodb:DescribeTable'
+                                - 'dynamodb:PutItem'
+                                - 'dynamodb:Scan'
+                                - 'dynamodb:Query'
+                                - 'dynamodb:UpdateItem'
+                                - 'dynamodb:BatchWriteItem'
+                                - 'dynamodb:BatchGetItem'
+                                Resource: 
+                                - !Sub ${IncidentsTable.Arn}
 
  ######  ##    ##  ######  
 ##    ## ###   ## ##    ## 
