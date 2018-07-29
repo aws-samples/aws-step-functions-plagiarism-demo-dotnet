@@ -1,12 +1,11 @@
-﻿using System;
-using Amazon.DynamoDBv2.DocumentModel;
+﻿using Amazon.DynamoDBv2.DocumentModel;
 using IncidentState;
 
 namespace IncidentPersistence
 {
     public static class IncidentDocument
     {
-        public static Document BuildIncidentDocument(State state)
+        public static Document BuildDynamoDbDocument(State state)
         {
             var examsList = new DynamoDBList();
 

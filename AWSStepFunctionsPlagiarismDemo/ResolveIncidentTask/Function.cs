@@ -15,13 +15,13 @@ namespace ResolveIncidentTask
     public class Function
     {
         private readonly AmazonDynamoDBClient _client;
-        private readonly string _table;
+        private readonly string _table_name;
 
 
         public Function()
         {
             _client = new AmazonDynamoDBClient(RegionEndpoint.APSoutheast2);
-            _table = Environment.GetEnvironmentVariable("TABLE_NAME");
+            _table_name = Environment.GetEnvironmentVariable("TABLE_NAME");
         }
 
         /// <summary>
@@ -37,11 +37,11 @@ namespace ResolveIncidentTask
             state.IncidentResolved = true;
             state.ResolutionDate = DateTime.Now;
 
-            Document incidentDocument = IncidentDocument.BuildIncidentDocument(state);
+            Document incidentDocument = IncidentDocument.BuildDynamoDbDocument(state);
 
             try
             {
-                var table = Table.LoadTable(_client, _table);
+                var table = Table.LoadTable(_client, _table_name);
                 table.PutItemAsync(incidentDocument);
             }
             catch (AmazonDynamoDBException e)

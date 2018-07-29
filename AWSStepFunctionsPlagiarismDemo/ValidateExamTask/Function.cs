@@ -1,5 +1,4 @@
 using System;
-using System.Linq;
 using Amazon.Lambda.Core;
 using IncidentState;
 
