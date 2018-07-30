@@ -28,6 +28,19 @@ namespace ValidateExamTask
             var lastExam = state.Exams[0];
             lastExam.Score = new Random().Next(0, 100);
 
+            if (lastExam.Score >= 76)
+            {
+                lastExam.Result = ExamResult.Pass;
+            }
+            else if (lastExam.Score >=1 & lastExam.Score < 76)
+            {
+                lastExam.Result = ExamResult.Fail;
+            }
+            else
+            {
+                lastExam.Result = ExamResult.DidNotSitExam;
+            }
+
             return state;
         }
     }

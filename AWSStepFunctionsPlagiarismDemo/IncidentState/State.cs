@@ -19,10 +19,7 @@ namespace IncidentState
         public Guid ExamId { get; set; }
         public DateTime ExamDate { get; set; }
         public int Score { get; set; }
-
-        public Exam()
-        {
-        }
+        public ExamResult Result { get; set; }
 
         public Exam(Guid examId, DateTime examDate, int score)
         {
@@ -30,6 +27,13 @@ namespace IncidentState
             ExamDate = examDate;
             Score = score;
         }
+    }
+
+    public enum ExamResult
+    {
+        Pass,
+        Fail,
+        DidNotSitExam
     }
 
 }

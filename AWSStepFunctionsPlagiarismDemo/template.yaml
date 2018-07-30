@@ -200,90 +200,82 @@ Resources:
             RoleArn: !GetAtt StepFunctionsServiceRole.Arn
             DefinitionString: !Sub |-
                 {
-                    "StartAt": "RegisterIncident",
-                    "Comment": "Developing with AWS Step Functions Demo",
-                    "States": {
-                        "RegisterIncident": {
-                            "Type": "Task",
-                            "Comment": "Register the plagiarism incident in the system and begin workflow execution.",
-                            "Resource": "${RegisterIncidentFunction.Arn}",
-                            "Next": "ScheduleExam"
-                        },
-                        "ScheduleExam": {
-                            "Type": "Task",
-                            "Comment": "Set the next exam deadline for the student to complete the exam.",
-                            "Resource": "${ScheduleExamFunction.Arn}",
-                            "Next": "SendNotification",
-                            "Catch": [
-                                {
-                                    "ErrorEquals": [
-                                        "StudentExceededAllowableExamRetries"
-                                    ],
-                                    "ResultPath": "$.Error",
-                                    "Next": "TakeAdministrativeAction"
-                                }
-                            ]
-                        },
-                        "SendNotification": {
-                            "Type": "Task",
-                            "Comment": "Send email confirmation to the student with the date the exam completion deadline.",
-                            "Resource": "${SendExamNotificationFunction.Arn}",
-                            "Next": "ExamConfirmationPending"
-                        },
-                        "ExamConfirmationPending": {
-                            "Type": "Wait",
-                            "Comment": "Waiting period exam expiration deadline.",
-                            "TimestampPath": "$.Exams[0].ExamDate",
-                            "Next": "ValidateExamResults"
-                        },
-                        "ValidateExamResults": {
-                            "Comment": "Validates the exam results.",
-                            "Type": "Task",
-                            "Resource": "${ValidateExamResultsFunction.Arn}",
-                            "Next": "HasStudentPassedExam"
-                        },
-                        "HasStudentPassedExam": {
-                            "Type": "Choice",
-                            "Comment": "If the student has a score less than 67, they need to reschedule",
-                            "Choices": [
-                                {
-                                    "Variable": "$.Exams[0].Score",
-                                    "NumericGreaterThanEquals": 67,
-                                    "Next": "ResolveIncident"
-                                },
-                                {
-                                    "And": [
-                                        {
-                                            "Variable": "$.Exams[0].Score",
-                                            "NumericLessThanEquals": 66
-                                        },
-                                        {
-                                            "Variable": "$.Exams[0].Score",
-                                            "NumericGreaterThanEquals": 1
-                                        }
-                                    ],
-                                    "Next": "ScheduleExam"
-                                },
-                                {
-                                    "Variable": "$.Exams[0].Score",
-                                    "NumericEquals": 0,
-                                    "Next": "TakeAdministrativeAction"
-                                }
-                            ]
-                        },
-                        "TakeAdministrativeAction": {
-                            "Type": "Task",
-                            "Resource": "${TakeAdministrativeActionFunction.Arn}",
-                            "Comment": "Take administrative action if student does not sit exam or fails all three attempts.",
-                            "End": true
-                        },
-                        "ResolveIncident": {
-                            "Type": "Task",
-                            "Comment": "Resolves the incident for the student.",
-                            "End": true,
-                            "Resource": "${ResolveIncidentFunction.Arn}"
+                  "StartAt": "RegisterIncident",
+                  "Comment": "Developing with AWS Step Functions Demo",
+                  "States": {
+                    "RegisterIncident": {
+                      "Type": "Task",
+                      "Comment": "Register the plagiarism incident in the system and begin workflow execution.",
+                      "Resource": "${RegisterIncidentFunction.Arn}",
+                      "Next": "ScheduleExam"
+                    },
+                    "ScheduleExam": {
+                      "Type": "Task",
+                      "Comment": "Set the next exam deadline for the student to complete the exam.",
+                      "Resource": "${ScheduleExamFunction.Arn}",
+                      "Next": "SendNotification",
+                      "Catch": [
+                        {
+                          "ErrorEquals": [
+                            "StudentExceededAllowableExamRetries"
+                          ],
+                          "ResultPath": "$.Error",
+                          "Next": "TakeAdministrativeAction"
                         }
+                      ]
+                    },
+                    "SendNotification": {
+                      "Type": "Task",
+                      "Comment": "Send email confirmation to the student with the date the exam completion deadline.",
+                      "Resource": "${SendExamNotificationFunction.Arn}",
+                      "Next": "ExamConfirmationPending"
+                    },
+                    "ExamConfirmationPending": {
+                      "Type": "Wait",
+                      "Comment": "Waiting period exam expiration deadline.",
+                      "TimestampPath": "$.Exams[0].ExamDate",
+                      "Next": "ValidateExamResults"
+                    },
+                    "ValidateExamResults": {
+                      "Comment": "Validates the exam results.",
+                      "Type": "Task",
+                      "Resource": "${ValidateExamResultsFunction.Arn}",
+                      "Next": "HasStudentPassedExam"
+                    },
+                    "HasStudentPassedExam": {
+                      "Type": "Choice",
+                      "Comment": "If the student has a score less than 67, they need to reschedule",
+                      "Choices": [
+                        {
+                          "Variable": "$.Exams[0].Result",
+                          "NumericEquals": 0,
+                          "Next": "ResolveIncident"
+                        },
+                        {
+                          "Variable": "$.Exams[0].Result",
+                          "NumericEquals": 1,
+                          "Next": "ScheduleExam"
+                        },
+                        {
+                          "Variable": "$.Exams[0].Result",
+                          "NumericEquals": 2,
+                          "Next": "TakeAdministrativeAction"
+                        }
+                      ]
+                    },
+                    "TakeAdministrativeAction": {
+                      "Type": "Task",
+                      "Resource": "${TakeAdministrativeActionFunction.Arn}",
+                      "Comment": "Take administrative action if student does not sit exam or fails all three attempts.",
+                      "End": true
+                    },
+                    "ResolveIncident": {
+                      "Type": "Task",
+                      "Comment": "Resolves the incident for the student.",
+                      "End": true,
+                      "Resource": "${ResolveIncidentFunction.Arn}"
                     }
+                  }
                 }
 
 ########  ##    ## ##    ##    ###    ##     ##  #######  ########  ########  
