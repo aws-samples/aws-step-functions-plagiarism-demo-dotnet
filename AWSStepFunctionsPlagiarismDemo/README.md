@@ -1,92 +1,187 @@
-# Developing with AWS Step Functions using .NET Core
+## Developing with AWS Step Functions using .NET Core
 
-## The Scenario
+### Requirements
 
-To illustrate the use of [AWS Step Functions](https://aws.amazon.com/step-functions/) I have created a scenario that describes a process where university students caught plagiarising on exams and/or assignments are required to take a test to assess their knowledge of the universities referencing standards.
+* [AWS CLI](https://aws.amazon.com/cli/) already configured with PowerUser permission
+* [.NET Core 2.0](https://www.microsoft.com/net/download/) installed
+* [AWS Extensions for .NET CLI](https://github.com/aws/aws-extensions-for-dotnet-cli) installed
+* [Docker](https://www.docker.com/community-edition) installed
+* [AWS SAM CLI](https://github.com/awslabs/aws-sam-local) installed
+* [Mono](https://www.mono-project.com/) installed if you are using Linux & macOS
 
-Visually, the process looks like this:
+### Recommended Tools
 
-![Developing With Step Functions](stepfunction_sm.png "Developing With Step Functions")
+* [AWS Toolkit for Visual Studio](https://aws.amazon.com/visualstudio/)
+* [Cake Build](https://cakebuild.net/docs/editors/) Editor support for Visual Studio Code and Visual Studio.
 
-The process starts by:
+### Other resources
 
-1. Registering the plagiarism incident
-2. Scheduling an exam. Students have one week to complete the test.
-3. Send the student an email notification to inform them of the requirement
-4. The process waits for the exam dedline to complete, before
-5. Validating the results
-6. Determining whether or not the student has sat the exam, or passed. Students get three attempts to pass the exam before...
-    * The incident is resolved, or
-    * Administrative action is taken.
+* [AWS Lambda for .NET Core](https://github.com/aws/aws-lambda-dotnet)
+* [Creating .NET Core AWS Lambda Projects without Visual Studio](https://aws.amazon.com/blogs/developer/creating-net-core-aws-lambda-projects-without-visual-studio/)
+* [The official AWS X-Ray SDK for .NET](https://github.com/aws/aws-xray-sdk-dotnet)
 
-## The Architecture
+## Build, Packaging, & Deployment
 
-This example uses a simple architecture, hosting a static website in [Amazon Simple Storage Service](https://aws.amazon.com/s3/) (Amazon S3) using Vue.js to invoke an [Amazon API Gateway](https://aws.amazon.com/api-gateway/) API. The API is configured with an AWS Service integration which invokes the [AWS Step Function](https://aws.amazon.com/step-functions/) state machine for the plagiarism workflow. Along the way, the task states in the state machine are executing [AWS Lambda](https://aws.amazon.com/lambda/) functions which are periodically persisting data to [Amazon DynamoDB](https://aws.amazon.com/dynamodb/) and send messages via [Amazon Simple Notification Service](https://aws.amazon.com/sns/).
+This solution comes with a pre-configured Cake (C# Make) script which provides a cross-platform build automation system with a C# DSL for tasks such as compiling code, copying files and folders, running unit tests, compressing files and building NuGet packages.
 
-![Developing With Step Functions](arch.png "Developing With Step Functions")
+The build.cake script has been set up to:
 
-## The Deployment Pipeline
+* Build your solution projects
+* Run your test projects
+* Package your functions
+* Run your API in SAM Local.
 
-All resources for this architecture are deployed using Amazon CloudFormation and the [Serverless Application Model](https://github.com/awslabs/serverless-application-model) (SAM). SAM is a superset of CloudFormation that make deploying Serverless applications easier by providing transformations for Functions, API's and DynamoDB.
+To execute a build use the following commands:
 
-To deploy the template we simply run two AWS CLI commands in the CloudFormation API. The package takes our SAM template as an input and we specify an file name as an output. CloudFormation will package all our function code and upload it to the specified S3 bucket, substituting the Code Uri property values with the location of the zipped up functions in the S3 bucket.
+### Linux & macOS
 
-``` bash
+```bash
+sh build.sh --target=Package
+```
+
+### Windows (Powershell)
+
+```powershell
+build.ps1 --target=Package
+```
+
+To package additional projects / functions add them to the build.cake script "project section".
+
+```csharp
+var projects = new []
+{
+    sourceDir.Path + "RegisterIncident/RegisterIncident.csproj",
+    sourceDir.Path + "{PROJECT_DIR}/{PROJECT_NAME}.csproj"
+};
+```
+
+AWS Lambda C# runtime requires a flat folder with all dependencies including the application. SAM will use `CodeUri` property to know where to look up for both application and dependencies:
+
+```yaml
+...
+    RegisterIncidentFunction:
+        Type: AWS::Serverless::Function
+        Properties:
+            CodeUri: ./artifacts/RegisterIncidentFunction.zip
+            ...
+```
+
+### Deployment
+
+First and foremost, we need an `S3 bucket` where we can upload our Lambda functions packaged as ZIP before we deploy anything - If you don't have a S3 bucket to store code artifacts then this is a good time to create one:
+
+```bash
+aws s3 mb s3://BUCKET_NAME
+```
+
+Next, run the following command to package our Lambda function to S3:
+
+```bash
 sam package \
     --template-file template.yaml \
     --output-template-file packaged.yaml \
-    --s3-bucket developingwithstepfunctions
+    --s3-bucket REPLACE_THIS_WITH_YOUR_S3_BUCKET_NAME
 ```
 
-Once the package has been created, execute the deploy command to create the application stack
+Next, the following command will create a Cloudformation Stack and deploy your SAM resources.
 
-``` bash
+```bash
 sam deploy \
     --template-file packaged.yaml \
-    --stack-name developing-with-step-functions \
+    --stack-name aws-step-functions-plagiarism-demo \
     --capabilities CAPABILITY_IAM
 ```
 
-Using this approach allow development teams to automate their deployments through their CI/CD pipelines and easily create discreet stacks of resources that align to environments (DEV TEST and PROD).
+> **See [Serverless Application Model (SAM) HOWTO Guide](https://github.com/awslabs/serverless-application-model/blob/master/HOWTO.md) for more details in how to get started.**
 
-Services used in the pipeline include:
 
-* [AWS Code Pipeline](https://aws.amazon.com/codepipeline)
-* [AWS Code Build](https://aws.amazon.com/codebuild/)
-* [AWS CloudFormation](https://aws.amazon.com/cloudformation/)
+After deployment is complete you can run the following command to retrieve the API Gateway Endpoint URL:
 
-![Developing With Step Functions Pipeline](pipeline.png "Developing With Step Functions Pipeline")
+```bash
+aws cloudformation describe-stacks \
+    --stack-name aws-step-functions-plagiarism-demo \
+    --query 'Stacks[].Outputs'
+``` 
 
-## Credits
 
-### Cookiecutter SAM for DotNet Lambda functions
+## Testing
 
-The application was initialised using the Cookiecutter SAM for DotNet Lambda functions. The cookiecutter template provides a wizard like command line experience to create a Serverless app based on SAM and .NET Core 2.1.
+For testing our code, we use XUnit and you can use `dotnet test` to run tests defined under `test/`
 
-For more details check out Heitor Lessa's repository at `todo: enter url here`
+```bash
+dotnet test RegisterIncident.Test
+```
 
-Also, a great video tutorial on how to use the Cookiecutter (and more) can be found on the AWS Twitch channel - [Build on Serverless | Building the "Simple Crypto Service" Python Project](https://www.twitch.tv/videos/248791444##)
+Alternatively, you can use Cake. It discovers and executes all the tests.
 
-## Resources
+### Linux & macOS
 
-### Step Functions
+```bash
+sh build.sh --target=Test
+```
 
-* [AWS Step Functions](https://aws.amazon.com/step-functions/)
-* [AWS Step Functions Developer Guide](https://docs.aws.amazon.com/step-functions/latest/dg/welcome.html)
-* [statelint](https://github.com/awslabs/statelint)
-* [Amazon States Language](https://states-language.net/spec.html)
-* [Step Functions Ruby Activity Worker](https://github.com/aws-samples/step-functions-ruby-activity-worker) example
+### Windows (Powershell)
 
-### Reference Architectures
+```powershell
+build.ps1 --target=Test
+```
 
-* [Serverless Reference Architecture: Image Recognition and Processing Backend](https://github.com/awslabs/lambda-refarch-imagerecognition)
-* [Serverless Reference Architecture: Snapshot Management](https://github.com/awslabs/aws-step-functions-ebs-snapshot-mgmt)
-* [Batch Architecture for Life Sciences Workloads](https://github.com/awslabs/aws-batch-genomics)
-* [S3 Bucket Sync Reference](https://github.com/awslabs/sync-buckets-state-machine)
-* [Step Functions Plug-In for Serverless Framework](https://github.com/horike37/serverless-step-functions)
+### Local development
 
-### AWS Developer Resources
+Given that you followed Packaging instructions then run the following to invoke your function locally:
 
-* [Serverless Application Model](https://github.com/awslabs/serverless-application-model)
-* [DevOps and AWS](https://aws.amazon.com/devops/)
-* [AWS Developer Tools](https://aws.amazon.com/products/developer-tools/)
+
+**Invoking function locally through local API Gateway**
+
+```bash
+sam local start-api
+```
+
+**SAM Local** is used to emulate both Lambda and API Gateway locally and uses our `template.yaml` to understand how to bootstrap this environment (runtime, where the source code is, etc.) - The following excerpt is what the CLI will read in order to initialize an API and its routes:
+
+```yaml
+...
+Events:
+    sam-app:
+        Type: Api # More info about API Event Source: https://github.com/awslabs/serverless-application-model/blob/master/versions/2016-10-31.md#api
+        Properties:
+            Path: /hello
+            Method: get
+```
+
+If the previous command run successfully you should now be able to hit the following local endpoint to invoke your function `http://localhost:3000/REPLACE-ME-WITH-ANYTHING`.
+
+
+# Appendix
+
+## AWS CLI commands
+
+AWS CLI commands to package, deploy and describe outputs defined within the cloudformation stack:
+
+```bash
+aws cloudformation package \
+    --template-file template.yaml \
+    --output-template-file packaged.yaml \
+    --s3-bucket REPLACE_THIS_WITH_YOUR_S3_BUCKET_NAME
+
+aws cloudformation deploy \
+    --template-file packaged.yaml \
+    --stack-name aws-step-functions-plagiarism-demo \
+    --capabilities CAPABILITY_IAM \
+    --parameter-overrides MyParameterSample=MySampleValue
+
+aws cloudformation describe-stacks \
+    --stack-name aws-step-functions-plagiarism-demo --query 'Stacks[].Outputs'
+```
+
+## Bringing to the next level
+
+Here are a few ideas that you can use to get more acquainted as to how this overall process works:
+
+* Create an additional API resource (e.g. /hello/{proxy+}) and return the name requested through this new path
+* Update unit test to capture that
+* Package & Deploy
+
+Next, you can use the following resources to know more about beyond hello world samples and how others structure their Serverless applications:
+
+* [AWS Serverless Application Repository](https://aws.amazon.com/serverless/serverlessrepo/)
