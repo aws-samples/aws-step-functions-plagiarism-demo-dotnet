@@ -20,13 +20,16 @@ namespace IncidentState
         public DateTime ExamDate { get; set; }
         public int Score { get; set; }
         public ExamResult Result { get; set; }
+        public bool NotifcationSent { get; set; }
 
         public Exam(Guid examId, DateTime examDate, int score)
         {
             ExamId = examId;
             ExamDate = examDate;
             Score = score;
+            NotifcationSent = false;
         }
+
     }
 
     public enum ExamResult

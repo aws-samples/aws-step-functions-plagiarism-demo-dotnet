@@ -38,6 +38,10 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "IncidentState", "IncidentSt
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "IncidentPersistence", "IncidentPersistence\IncidentPersistence.csproj", "{7547FBCA-C693-4190-BED3-7E7B59ABB95C}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SendNotificationTask.Tests", "SendNotificationTask.Tests\SendNotificationTask.Tests.csproj", "{7BC85B28-1084-4439-A601-E456631088DC}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ResolveIncidentTask.Tests", "ResolveIncidentTask.Tests\ResolveIncidentTask.Tests.csproj", "{033FDAFD-267E-4BA0-95EB-8EB112D98A03}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -76,6 +80,14 @@ Global
 		{7547FBCA-C693-4190-BED3-7E7B59ABB95C}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{7547FBCA-C693-4190-BED3-7E7B59ABB95C}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{7547FBCA-C693-4190-BED3-7E7B59ABB95C}.Release|Any CPU.Build.0 = Release|Any CPU
+		{7BC85B28-1084-4439-A601-E456631088DC}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{7BC85B28-1084-4439-A601-E456631088DC}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{7BC85B28-1084-4439-A601-E456631088DC}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{7BC85B28-1084-4439-A601-E456631088DC}.Release|Any CPU.Build.0 = Release|Any CPU
+		{033FDAFD-267E-4BA0-95EB-8EB112D98A03}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{033FDAFD-267E-4BA0-95EB-8EB112D98A03}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{033FDAFD-267E-4BA0-95EB-8EB112D98A03}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{033FDAFD-267E-4BA0-95EB-8EB112D98A03}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

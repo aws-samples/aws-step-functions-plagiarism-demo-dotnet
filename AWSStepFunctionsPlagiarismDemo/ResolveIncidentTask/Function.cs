@@ -1,9 +1,5 @@
 using System;
-using Amazon;
-using Amazon.DynamoDBv2;
-using Amazon.DynamoDBv2.DocumentModel;
 using Amazon.Lambda.Core;
-using Amazon.Runtime;
 using Amazon.XRay.Recorder.Handlers.AwsSdk;
 using IncidentPersistence;
 using IncidentState;
@@ -15,15 +11,17 @@ namespace ResolveIncidentTask
 {
     public class Function
     {
-        private readonly AmazonDynamoDBClient _client;
-        private readonly string _table_name;
-
+        private readonly IIncidentRepository _incidentRepository;
 
         public Function()
         {
             AWSSDKHandler.RegisterXRayForAllServices();
-            _client = new AmazonDynamoDBClient(RegionEndpoint.APSoutheast2);
-            _table_name = Environment.GetEnvironmentVariable("TABLE_NAME");
+            _incidentRepository = new IncidentRepository(Environment.GetEnvironmentVariable("TABLE_NAME"));
+        }
+
+        public Function(IIncidentRepository incidentRepository)
+        {
+            _incidentRepository = incidentRepository;
         }
 
         /// <summary>
@@ -39,28 +37,10 @@ namespace ResolveIncidentTask
             state.IncidentResolved = true;
             state.ResolutionDate = DateTime.Now;
 
-            Document incidentDocument = IncidentDocument.BuildDynamoDbDocument(state);
-
-            try
-            {
-                var table = Table.LoadTable(_client, _table_name);
-                table.PutItemAsync(incidentDocument);
-            }
-            catch (AmazonDynamoDBException e)
-            {
-                Console.WriteLine(e.Message);
-                throw;
-            }
-            catch (AmazonServiceException e)
-            { 
-                Console.WriteLine(e.Message);
-                throw;
-            }
-            catch (Exception e)
-            { 
-                Console.WriteLine(e.Message);
-                throw;
-            }
+            _incidentRepository.SaveIncident(state);
         }
     }
+
+
+    
 }
