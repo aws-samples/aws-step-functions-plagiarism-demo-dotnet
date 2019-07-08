@@ -3,7 +3,7 @@
     <TargetFramework>netcoreapp2.1</TargetFramework>
   </PropertyGroup>
   <ItemGroup>
-    <PackageReference Include="AWSSDK.DynamoDBv2" Version="3.3.14" />
+    <PackageReference Include="AWSSDK.DynamoDBv2" Version="3.3.101.34" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\IncidentState\IncidentState.csproj" />
