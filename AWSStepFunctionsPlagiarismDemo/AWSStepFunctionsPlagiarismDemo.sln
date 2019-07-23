@@ -21,11 +21,8 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "SendNotificationTask", "Sen
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ValidateExamTask", "ValidateExamTask\ValidateExamTask.csproj", "{14D717A5-EDAF-43D8-B96D-5F97B82A2C9A}"
 EndProject
-Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Build", "Build", "{296D1A28-AD46-4DD3-866F-2BCAB14A7E4B}"
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "SAM", "SAM", "{296D1A28-AD46-4DD3-866F-2BCAB14A7E4B}"
 	ProjectSection(SolutionItems) = preProject
-		build.cake = build.cake
-		build.ps1 = build.ps1
-		build.sh = build.sh
 		template.yaml = template.yaml
 	EndProjectSection
 EndProject

@@ -46,7 +46,7 @@ Resources:
         Type: AWS::Serverless::Function
         Properties:
             Description: DevelopingWithDotNetStepFunctions - Send email to administrative staff to notify staff that the student has failed all tests and action needs to be taken.
-            CodeUri: ./artifacts/AdminActionTask.zip
+            CodeUri: ./AdminActionTask/
             Handler: AdminActionTask::AdminActionTask.Function::FunctionHandler
             Role: !Sub ${DynamoDBCrudRole.Arn}
 
@@ -54,7 +54,7 @@ Resources:
         Type: AWS::Serverless::Function
         Properties:
             Description: DevelopingWithDotNetStepFunctions - Registers the  incident in the system.
-            CodeUri: ./artifacts/RegisterIncidentTask.zip
+            CodeUri: ./RegisterIncidentTask/
             Handler: RegisterIncidentTask::RegisterIncidentTask.Function::FunctionHandler
             Role: !Sub ${DynamoDBCrudRole.Arn}
 
@@ -62,7 +62,7 @@ Resources:
         Type: AWS::Serverless::Function
         Properties:
             Description: DevelopingWithDotNetStepFunctions - Marks the  incident as resolved.
-            CodeUri: ./artifacts/ResolveIncidentTask.zip
+            CodeUri: ./ResolveIncidentTask
             Handler: ResolveIncidentTask::ResolveIncidentTask.Function::FunctionHandler
             Role: !Sub ${DynamoDBCrudRole.Arn}
 
@@ -70,7 +70,7 @@ Resources:
         Type: AWS::Serverless::Function
         Properties:
             Description: DevelopingWithDotNetStepFunctions - Schedules the  Exam for the student to complete.
-            CodeUri: ./artifacts/ScheduleExamTask.zip
+            CodeUri: ./ScheduleExamTask
             Handler: ScheduleExamTask::ScheduleExamTask.Function::FunctionHandler
             Role: !Sub ${DynamoDBCrudRole.Arn}
 
@@ -78,7 +78,7 @@ Resources:
         Type: AWS::Serverless::Function
         Properties:
             Description: DevelopingWithDotNetStepFunctions - Send email to the student about their  Exam and when it needs to be completed by.
-            CodeUri: ./artifacts/SendNotificationTask.zip
+            CodeUri: ./SendNotificationTask/
             Handler: SendNotificationTask::SendNotificationTask.Function::FunctionHandler
             Policies:
                 - SNSPublishMessagePolicy:
@@ -86,13 +86,12 @@ Resources:
             Environment:
                 Variables:
                     TOPIC_ARN: !Ref DevelopingWithStepFunctionsSNSTopic
-  
 
     ValidateExamResultsFunction:
         Type: AWS::Serverless::Function
         Properties:
             Description: DevelopingWithStepFunctions - Validates the exam results.
-            CodeUri: ./artifacts/ValidateExamTask.zip
+            CodeUri: ./ValidateExamTask/
             Handler: ValidateExamTask::ValidateExamTask.Function::FunctionHandler
             Role: !Sub ${DynamoDBCrudRole.Arn}
 
