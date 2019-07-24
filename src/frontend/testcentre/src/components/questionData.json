@@ -1,0 +1,26 @@
+{
+  "questions" : [
+    {
+      "text": "Which AWS service would you use as an object store?",
+      "answers": {
+        "s3": "S3",
+        "efs": "EFS",
+        "ebs": "EBS",
+        "appsync": "Amazon AppSync"
+      },
+      "correct_answer": "s3",
+      "question_id": "q1"
+    },
+    {
+      "text": "How many AWS services are certified to the IRAP Protected Level?",
+      "answers": {
+        "42": "42 services in Sydney, with a further 8 globally at Unclassified DLM.",
+        "all": "All services",
+        "none": "None!",
+        "ec2": "EC2, EBS, IAM, and VPC"
+      },
+      "correct_answer": "42",
+      "question_id": "q2"
+    }
+  ]
+}
