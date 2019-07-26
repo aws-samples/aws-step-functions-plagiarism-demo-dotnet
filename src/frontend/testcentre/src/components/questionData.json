@@ -21,6 +21,40 @@
       },
       "correct_answer": "42",
       "question_id": "q2"
+    },
+    {
+      "text": "What is an AWS region?",
+      "answers": {
+        "office": "An office where Amazon has staff",
+        "region": "A collection of 2 or more availability zones, connected by high-speed, low latency links",
+        "distcenter": "An area where you can have Amazon packages delivered",
+        "datacentre": "A data centre, full of server racks"
+      },
+      "correct_answer": "welp",
+      "question_id": "q3"
+    },
+    {
+      "text": "Which AWS service is used for management identity and access?",
+      "answers": {
+        "iam": "IAM",
+        "secg": "Security Groups",
+        "nacl": "Network Access Control Lists (NACL)",
+        "external": "You need to utilise an external service, like LDAP or Active Directory, for this."
+      },
+      "correct_answer": "welp",
+      "question_id": "q4"
+    },
+    {
+      "text": "Who is the CEO of AWS?",
+      "answers": {
+        "ballmer": "Jeff Balmer",
+        "rms": "Richard Stallman",
+        "elisha": "Simon Elisha",
+        "jassy": "Andy Jassy",
+        "jeff": "Jeff Bezos"
+      },
+      "correct_answer": "welp",
+      "question_id": "q4"
     }
   ]
 }

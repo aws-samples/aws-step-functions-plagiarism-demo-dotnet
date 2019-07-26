@@ -10,7 +10,7 @@
           required
           @change="questionAnswered"
         >
-          <option disabled value="">Please select one</option>
+          <option disabled selected value="">Please select one</option>
           <option
             v-for="(text, value) in answers"
             v-bind:value="value"
