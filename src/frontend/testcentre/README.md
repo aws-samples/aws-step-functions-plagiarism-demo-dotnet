@@ -4,6 +4,8 @@ An app designed to test students as part of an AWS Step Functions workflow.
 
 It can accept GET variables to refer to an exam attempt: IncidentId, and ExamId.
 
+![TestCentre Screenshot](testcentre-screenshot.png)
+
 ## Project setup
 ```
 yarn install

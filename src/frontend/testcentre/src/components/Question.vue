@@ -1,36 +1,41 @@
 <template>
-  <div className="question">
-      <label className="label">{{questionText}}
-     <select
-        required
-        v-model="selected"
-        @change="questionAnswered"
-      >
-        <option disabled value="">Please select one</option>
-        <option
-          v-for="(text, value) in answers"
-          v-bind:value="value"
-          v-bind:key="value"
-        >
-          {{ text }}
-        </option>
-      </select>
-      <span>Selected: {{ selected }}</span>
+  <div class="field box question">
+    <label className="label">
+      <strong> Question {{questionNumber + 1}}:</strong>
+      <em> {{questionText}}</em>
       </label>
+    <div class="control">
+      <div class="select is-fullwidth">
+        <select
+          required
+          @change="questionAnswered"
+        >
+          <option disabled value="">Please select one</option>
+          <option
+            v-for="(text, value) in answers"
+            v-bind:value="value"
+            v-bind:key="value"
+          >
+           {{text}}
+          </option>
+        </select>
+      </div>
     </div>
+    <p class="help">Choose the best option.</p>
+  </div>
 </template>
 
 <script>
 export default {
   name: 'Question',
-  data: function() {
-    return {
-        selected: ''
-    }
-  },
   props: {
+    // Unique identifier for question.
     questionId: String,
+    // Question sequence number (index in array of questions).
+    questionNumber: Number,
+    // Text of questions.
     questionText: String,
+    // An Object map of answers for the question.
     answers: Object,
   },
   methods: {
