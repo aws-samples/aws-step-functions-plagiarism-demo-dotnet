@@ -33,7 +33,7 @@
           <a class="button is-info" href="?IncidentId=foo123&ExamId=bar456">Test GET variables</a>
       </div>
       <div class="control">
-          <a class="button is-info" href="?IncidentId=foo123&ExamId=bar456">Submit to Step Function Execution</a>
+          <a @click="submitToStepFunctions" class="button is-info" href="?IncidentId=foo123&ExamId=bar456">Submit to Step Function Execution</a>
       </div>
     </div>
   </div>
@@ -72,7 +72,26 @@ export default {
     ExamEventBus.$on('examSubmitted', score => {
       this.examData.Score = score;
     });
-  }
+  },
+
+  methods: {
+    submitToStepFunctions: function(event) {
+      event.preventDefault();
+
+      // Post our response back to Step Functions to continue the flow.
+      let apiName = 'PlagiarismStepFunctionsDemo';
+      let path = '/submitExam';
+      let myInit = {
+        body: this.examData
+      };
+
+      this.$Amplify.API.post(apiName, path, myInit).then(response => {
+        console.log(response);
+      }).catch(error => {
+        console.log(error.response);
+      });
+      console.log(this.examData);
+    }
   }
 }
 </script>
