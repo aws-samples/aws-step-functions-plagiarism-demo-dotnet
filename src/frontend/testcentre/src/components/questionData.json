@@ -30,7 +30,7 @@
         "distcenter": "An area where you can have Amazon packages delivered",
         "datacentre": "A data centre, full of server racks"
       },
-      "correct_answer": "welp",
+      "correct_answer": "region",
       "question_id": "q3"
     },
     {
@@ -41,7 +41,7 @@
         "nacl": "Network Access Control Lists (NACL)",
         "external": "You need to utilise an external service, like LDAP or Active Directory, for this."
       },
-      "correct_answer": "welp",
+      "correct_answer": "iam",
       "question_id": "q4"
     },
     {
@@ -53,7 +53,7 @@
         "jassy": "Andy Jassy",
         "jeff": "Jeff Bezos"
       },
-      "correct_answer": "welp",
+      "correct_answer": "jassy",
       "question_id": "q5"
     }
   ]

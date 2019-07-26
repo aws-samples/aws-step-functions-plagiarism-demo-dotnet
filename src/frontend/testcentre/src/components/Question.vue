@@ -9,6 +9,7 @@
         <select
           required
           @change="questionAnswered"
+          v-model="selected"
         >
           <option disabled selected value="">Please select one</option>
           <option
@@ -28,6 +29,11 @@
 <script>
 export default {
   name: 'Question',
+   data() {
+    return {
+      selected: '',
+    }
+  },
   props: {
     // Unique identifier for question.
     questionId: String,
