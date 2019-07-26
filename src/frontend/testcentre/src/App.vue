@@ -13,7 +13,7 @@ export default {
   name: 'app',
   components: {
     Exam,
-    ExamIntegration,
+    ExamIntegration
   }
 }
 </script>

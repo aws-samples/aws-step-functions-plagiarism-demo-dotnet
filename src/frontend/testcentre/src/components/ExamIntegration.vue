@@ -32,22 +32,28 @@
       <div class="control">
           <a class="button is-info" href="?IncidentId=foo123&ExamId=bar456">Test GET variables</a>
       </div>
+      <div class="control">
+          <a class="button is-info" href="?IncidentId=foo123&ExamId=bar456">Submit to Step Function Execution</a>
+      </div>
     </div>
   </div>
 </template>
 
 <script>
+// Use the event bus to respond when a score is recorded from the exam.
+import ExamEventBus from './ExamEventBus';
+
 export default {
   data() {
     return {
-    examData: {
-      // Exam score (out of 100).
-      Score: '',
-      // Unique identifier for plagiarism incident.
-      IncidentId: 'Not supplied',
-      // Unique identifier for exam attempt.
-      ExamId: 'Not supplied',
-    }
+      examData: {
+        // Exam score (out of 100).
+        Score: '',
+        // Unique identifier for plagiarism incident.
+        IncidentId: 'Not supplied',
+        // Unique identifier for exam attempt.
+        ExamId: 'Not supplied',
+      }
     }
   },
   // If present, get the primary keys, then set our hidden form value.
@@ -58,6 +64,15 @@ export default {
       let params = new URLSearchParams(uri);
       this.examData.IncidentId = params.get('IncidentId') || this.examData.IncidentId;
       this.examData.ExamId = params.get('ExamId') || this.examData.ExamId;
+  },
+
+  mounted: function() {
+    // Register a listener to record a score when an exam is submitted.
+    // @see Exam.vue::examSubmitted().
+    ExamEventBus.$on('examSubmitted', score => {
+      this.examData.Score = score;
+    });
+  }
   }
 }
 </script>

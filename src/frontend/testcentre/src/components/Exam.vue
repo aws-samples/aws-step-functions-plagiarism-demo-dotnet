@@ -50,6 +50,8 @@
 <script>
 import QuestionData from './questionData.json';
 import Question from './Question.vue';
+import ExamEventBus from './ExamEventBus';
+
 export default {
   name: "Exam",
   components: {
@@ -80,6 +82,8 @@ export default {
      */
     examSubmit() {
       this.calculateScore();
+      // Let other components know what the score is.
+      ExamEventBus.$emit('examSubmitted', this.score);
     },
     /**
      * Reacts to a Question select event.
