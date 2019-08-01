@@ -68,4 +68,14 @@ $navbar-background-color: $aws_squidink;
   margin-left: auto;
 }
 
+#task-token-preview  {
+  overflow: hidden;
+  width: 40em;
+  transition: 1s;
+}
+
+#task-token-preview:hover {
+  width: 60em;
+}
+
 @import "~bulma/bulma";
