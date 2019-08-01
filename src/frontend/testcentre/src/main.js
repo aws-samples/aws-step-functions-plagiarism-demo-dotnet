@@ -4,20 +4,17 @@ import App from './App.vue';
 import Amplify, * as AmplifyModules from 'aws-amplify';
 import { AmplifyPlugin } from 'aws-amplify-vue';
 
-Amplify.configure({
-  aws_project_region: "ap-southeast-2",
-  API: {
-    endpoints: [
-      {
-        name: "PlagiarismStepFunctionsDemo",
-        endpoint: "https://1234567890-abcdefgh.amazonaws.com"
-      }
-    ]
-  }
-});
+import awsconfig from '../awsconfig.json';
 
-Vue.use(AmplifyModules, AmplifyPlugin);
+// Update our API Gateway config if variables are provided in a .env file.
+// The .env file should be added to the root of the project.
+if (process.env.VUE_APP_APIGW_ENDPOINT) {
+   awsconfig.API.endpoints[0].endpoint = process.env.VUE_APP_APIGW_ENDPOINT;
+}
 
+Amplify.configure(awsconfig);
+
+Vue.use(AmplifyPlugin, AmplifyModules);
 Vue.config.productionTip = false;
 
 new Vue({
