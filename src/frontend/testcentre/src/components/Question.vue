@@ -8,6 +8,7 @@
       <div class="select is-fullwidth">
         <select
           required
+          :disabled="exam_disabled == 1"
           @change="questionAnswered"
           v-model="selected"
         >
@@ -27,11 +28,14 @@
 </template>
 
 <script>
+import ExamEventBus from './ExamEventBus';
+
 export default {
   name: 'Question',
    data() {
     return {
       selected: '',
+      exam_disabled: false
     }
   },
   props: {
@@ -43,6 +47,12 @@ export default {
     questionText: String,
     // An Object map of answers for the question.
     answers: Object,
+  },
+  mounted() {
+    // Disable the form if this exam has been sent back to StepFunctions.
+    ExamEventBus.$on('examPostedSuccessfully', () => {
+      this.exam_disabled = true;
+    });
   },
   methods: {
     questionAnswered() {

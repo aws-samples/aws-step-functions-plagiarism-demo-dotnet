@@ -29,15 +29,40 @@
           You can click the button below to pass some dummy variables, to check the integration is working.
         </p>
       </div>
-      <div class="control">
-          <a class="button is-info" href="?IncidentId=foo123&ExamId=bar456">Test GET variables</a>
+
+      <div class="level">
+        <div class="level-left">
+          <div class="control level-item">
+              <a class="button is-info" href="?IncidentId=foo123&ExamId=bar456">Test GET variables</a>
+          </div>
+
+          <div class="control level-item">
+              <a @click="submitToStepFunctions" class="button is-black" href="?IncidentId=foo123&ExamId=bar456">Submit to Step Function Execution</a>
+          </div>
+        </div>
       </div>
-      <div class="control">
-          <a @click="submitToStepFunctions" class="button is-info" href="?IncidentId=foo123&ExamId=bar456">Submit to Step Function Execution</a>
+
+      <!--
+        Hidden notification messages which are shown depending on the outcome
+        of a POST to our APIGW endpoint.
+      -->
+
+      <div  class="notification success exam-submitted is-primary">
+        <button v-on:click="deleteNotification" class="delete"></button>
+        Your exam has been submitted. Your score was <strong>{{examData.Score}}%</strong> Your assessor will be in touch to let you
+        know what the next steps are.
       </div>
-    </div>
+
+      <div v-if='submitFailed' class="notification failure submission-failed is-error">
+        <button v-on:click="deleteNotification" class="delete"></button>
+        <p>There was an error when submitting your exam:</p>
+        <br />
+        <pre>{{submitErrorMessage}}</pre>
+      </div>
+      </div>
   </div>
 </template>
+
 
 <script>
 // Use the event bus to respond when a score is recorded from the exam.
@@ -53,7 +78,12 @@ export default {
         IncidentId: 'Not supplied',
         // Unique identifier for exam attempt.
         ExamId: 'Not supplied',
-      }
+      },
+      // Set to true if a POST to our API is successful.
+      submitSuccessful: false,
+      // Set to true if a POST to our API fails.
+      submitFailed: false,
+      submitErrorMessage: ''
     }
   },
   // If present, get the primary keys, then set our hidden form value.
@@ -86,11 +116,25 @@ export default {
       };
 
       this.$Amplify.API.post(apiName, path, myInit).then(response => {
-        console.log(response);
+        this.submitSuccessful = true;
+        // Let the exam component know that this exam has been sent back.
+        ExamEventBus.$emit('examPostedSuccessfully');
+
       }).catch(error => {
-        console.log(error.response);
+        // Something went wrong.
+        this.submitFailed = true;
+        this.submitErrorMessage = error;
       });
-      console.log(this.examData);
+    },
+    deleteNotification: function(event) {
+      // Allow failed attempts to close the notification and try again.
+      if (event.target.parentNode.classList.contains('failure')) {
+        this.submitFailed = false;
+      }
+      // Allow successful submissions to close the notification.
+      if (event.target.parentNode.classList.contains('success')) {
+        this.submitSucessful = false;
+      }
     }
   }
 }

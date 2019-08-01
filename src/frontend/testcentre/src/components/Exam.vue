@@ -33,7 +33,7 @@
 
       <div class="field submit is-flex">
           <div class="control">
-            <input class="button is-primary" type="submit" value="Submit Exam" />
+            <input :disabled="exam_disabled == 1" class="button is-primary" type="submit" value="Submit Exam" />
           </div>
           <div id="score-display" class="control">
             <div class="tags are-medium has-addons">
@@ -69,13 +69,20 @@ export default {
       // Number of questions answered.
       questions_answered: 0,
       // The user's exam score, out of 100.
-      score: 0
+      score: 0,
+      // Disable all inputs if the exam has been submitted.
+      exam_disabled: false,
     }
   },
   created() {
     this.total_questions = QuestionData.questions.length;
   },
-
+  mounted() {
+    // Disable the form if this exam has been sent back to StepFunctions.
+    ExamEventBus.$on('examPostedSuccessfully', () => {
+      this.exam_disabled = true;
+    });
+  },
   methods: {
     /**
      * Reacts when form is submitted. Calculates score and puts it back into the workflow.
