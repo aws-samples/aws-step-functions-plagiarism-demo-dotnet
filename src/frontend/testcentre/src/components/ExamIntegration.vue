@@ -118,14 +118,12 @@ export default {
   methods: {
     submitToStepFunctions: function(event) {
       event.preventDefault();
-
       // Post our response back to Step Functions to continue the flow.
       let apiName = 'PlagiarismStepFunctionsDemo';
       let path = '/submitExam';
       let myInit = {
         body: this.examData
       };
-
       this.$Amplify.API.post(apiName, path, myInit).then(response => {
         this.submitSuccessful = true;
         // Let the exam component know that this exam has been sent back.
@@ -134,7 +132,9 @@ export default {
       }).catch(error => {
         // Something went wrong.
         this.submitFailed = true;
-        this.submitErrorMessage = error;
+        // Hack to get endpoint string.
+        let endpointTried = this.$Amplify.API._options.endpoints[0].endpoint + path;
+        this.submitErrorMessage = error + ` (tried ${endpointTried})`;
       });
     },
     deleteNotification: function(event) {
