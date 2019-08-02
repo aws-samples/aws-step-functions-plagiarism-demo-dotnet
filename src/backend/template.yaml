@@ -1,451 +1,464 @@
 AWSTemplateFormatVersion: '2010-09-09'
 Transform: AWS::Serverless-2016-10-31
-Description: > 
-            Developing with Step Functions Demo application. Scenario - University students caught plagiarising on exams 
-            and assignments are asked required to take exams to test that know how to reference properly. 
-            Students get three attempts before action is taken. This demo uses exposes an AWS Step Function via an Amazon API Gateway. 
-            The step-function definition invokes tasks via AWS Lambda (.NET Core 2.1), that store results in Amazon DynamoDB. 
-            Notifications are implemented via Amazon SNS and AWS X-Ray provides distributed tracing capability.
+Description: >
+  Developing with Step Functions Demo application. Scenario - University students caught plagiarising on exams 
+  and assignments are asked required to take exams to test that know how to reference properly. 
+  Students get three attempts before action is taken. This demo uses exposes an AWS Step Function via an Amazon API Gateway. 
+  The step-function definition invokes tasks via AWS Lambda (.NET Core 2.1), that store results in Amazon DynamoDB. 
+  Notifications are implemented via Amazon SNS and AWS X-Ray provides distributed tracing capability.
 
 Parameters:
-    NotificationEmail:
-        Default: sliedig@amazon.com
-        Type: String
-        Description: Email address to subscribe to SNS topic and receive notifications from Plagiarism Violations System
+  ToEmail: 
+    Type: String
+    Description: Student email (testing only)
 
-######   ##        #######  ########     ###    ##        ######  
-##    ##  ##       ##     ## ##     ##   ## ##   ##       ##    ## 
-##        ##       ##     ## ##     ##  ##   ##  ##       ##       
-##   #### ##       ##     ## ########  ##     ## ##        ######  
-##    ##  ##       ##     ## ##     ## ######### ##             ## 
-##    ##  ##       ##     ## ##     ## ##     ## ##       ##    ## 
- ######   ########  #######  ########  ##     ## ########  ######  
+  FromEmail:
+    Type: String
+    Description: Administrator email (testing only)
+    
+  ApiKey:
+    Type: String
+    Description: Sendgrid API key - used in this example, but can be substituted with self managed or other SaaS (testing only)
+
+  StudentTestingCentreUrl:
+    Default: "http://localhost:3000"
+    Type: String
+    Description: Endpoint for the TEsting Centre website
+  
+  ######   ##        #######  ########     ###    ##        ######  
+  ##    ##  ##       ##     ## ##     ##   ## ##   ##       ##    ## 
+  ##        ##       ##     ## ##     ##  ##   ##  ##       ##       
+  ##   #### ##       ##     ## ########  ##     ## ##        ######  
+  ##    ##  ##       ##     ## ##     ## ######### ##             ## 
+  ##    ##  ##       ##     ## ##     ## ##     ## ##       ##    ## 
+  ######   ########  #######  ########  ##     ## ########  ######  
 
 Globals:
-    Function:
-        Runtime: dotnetcore2.1
-        Timeout: 30
-        Tracing: Active
-        Environment:
-            Variables:
-                TABLE_NAME: !Ref IncidentsTable
-        Tags:
-            Project: DevelopingWithDotNetStepFunctions
+  Function:
+    Runtime: dotnetcore2.1
+    Timeout: 30
+    Tracing: Active
+    Environment:
+      Variables:
+        TABLE_NAME: !Ref IncidentsTable
+    Tags:
+      Project: DevelopingWithDotNetStepFunctions
 
 Resources:
 
-##          ###    ##     ## ########  ########     ###    
-##         ## ##   ###   ### ##     ## ##     ##   ## ##   
-##        ##   ##  #### #### ##     ## ##     ##  ##   ##  
-##       ##     ## ## ### ## ########  ##     ## ##     ## 
-##       ######### ##     ## ##     ## ##     ## ######### 
-##       ##     ## ##     ## ##     ## ##     ## ##     ## 
-######## ##     ## ##     ## ########  ########  ##     ##
+  ##          ###    ##     ## ########  ########     ###    
+  ##         ## ##   ###   ### ##     ## ##     ##   ## ##   
+  ##        ##   ##  #### #### ##     ## ##     ##  ##   ##  
+  ##       ##     ## ## ### ## ########  ##     ## ##     ## 
+  ##       ######### ##     ## ##     ## ##     ## ######### 
+  ##       ##     ## ##     ## ##     ## ##     ## ##     ## 
+  ######## ##     ## ##     ## ########  ########  ##     ##
 
-    TakeAdministrativeActionFunction:
-        Type: AWS::Serverless::Function
-        Properties:
-            Description: DevelopingWithDotNetStepFunctions - Send email to administrative staff to notify staff that the student has failed all tests and action needs to be taken.
-            CodeUri: ./AdminActionTask/
-            Handler: AdminActionTask::AdminActionTask.Function::FunctionHandler
-            Role: !Sub ${DynamoDBCrudRole.Arn}
+  TakeAdministrativeActionFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      Description: DevelopingWithDotNetStepFunctions - Send email to administrative staff to notify staff that the student has failed all tests and action needs to be taken.
+      CodeUri: ./AdminActionTask/
+      Handler: AdminActionTask::AdminActionTask.Function::FunctionHandler
+      Role: !Sub ${DynamoDBCrudRole.Arn}
 
-    RegisterIncidentFunction:
-        Type: AWS::Serverless::Function
-        Properties:
-            Description: DevelopingWithDotNetStepFunctions - Registers the  incident in the system.
-            CodeUri: ./RegisterIncidentTask/
-            Handler: RegisterIncidentTask::RegisterIncidentTask.Function::FunctionHandler
-            Role: !Sub ${DynamoDBCrudRole.Arn}
+  RegisterIncidentFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      Description: DevelopingWithDotNetStepFunctions - Registers the  incident in the system.
+      CodeUri: ./RegisterIncidentTask/
+      Handler: RegisterIncidentTask::RegisterIncidentTask.Function::FunctionHandler
+      Role: !Sub ${DynamoDBCrudRole.Arn}
 
-    ResolveIncidentFunction:
-        Type: AWS::Serverless::Function
-        Properties:
-            Description: DevelopingWithDotNetStepFunctions - Marks the  incident as resolved.
-            CodeUri: ./ResolveIncidentTask
-            Handler: ResolveIncidentTask::ResolveIncidentTask.Function::FunctionHandler
-            Role: !Sub ${DynamoDBCrudRole.Arn}
+  ResolveIncidentFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      Description: DevelopingWithDotNetStepFunctions - Marks the  incident as resolved.
+      CodeUri: ./ResolveIncidentTask
+      Handler: ResolveIncidentTask::ResolveIncidentTask.Function::FunctionHandler
+      Role: !Sub ${DynamoDBCrudRole.Arn}
 
-    ScheduleExamFunction:
-        Type: AWS::Serverless::Function
-        Properties:
-            Description: DevelopingWithDotNetStepFunctions - Schedules the  Exam for the student to complete.
-            CodeUri: ./ScheduleExamTask
-            Handler: ScheduleExamTask::ScheduleExamTask.Function::FunctionHandler
-            Role: !Sub ${DynamoDBCrudRole.Arn}
+  ScheduleExamFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      Description: DevelopingWithDotNetStepFunctions - Schedules the  Exam for the student to complete.
+      CodeUri: ./ScheduleExamTask
+      Handler: ScheduleExamTask::ScheduleExamTask.Function::FunctionHandler
+      Role: !Sub ${DynamoDBCrudRole.Arn}
 
-    SendExamNotificationFunction:
-        Type: AWS::Serverless::Function
-        Properties:
-            Description: DevelopingWithDotNetStepFunctions - Send email to the student about their  Exam and when it needs to be completed by.
-            CodeUri: ./SendNotificationTask/
-            Handler: SendNotificationTask::SendNotificationTask.Function::FunctionHandler
-            Policies:
-                - SNSPublishMessagePolicy:
-                    TopicName: !GetAtt DevelopingWithStepFunctionsSNSTopic.TopicName
-            Environment:
-                Variables:
-                    TOPIC_ARN: !Ref DevelopingWithStepFunctionsSNSTopic
+  SendExamNotificationFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      Description: DevelopingWithDotNetStepFunctions - Send email to the student about their  Exam and when it needs to be completed by.
+      CodeUri: ./SendNotificationTask/
+      Handler: SendNotificationTask::SendNotificationTask.Function::FunctionHandler
+      Environment:
+        Variables:
+          SENDGRID_API_KEY: !Ref ApiKey
+          TO_EMAIL: !Ref ToEmail
+          FROM_EMAIL: !Ref FromEmail
+          TESTING_CENTRE_URL: !Ref StudentTestingCentreUrl
+          
+  ValidateExamResultsFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      Description: DevelopingWithStepFunctions - Validates the exam results.
+      CodeUri: ./ValidateExamTask/
+      Handler: ValidateExamTask::ValidateExamTask.Function::FunctionHandler
+      Role: !Sub ${DynamoDBCrudRole.Arn}
 
-    ValidateExamResultsFunction:
-        Type: AWS::Serverless::Function
-        Properties:
-            Description: DevelopingWithStepFunctions - Validates the exam results.
-            CodeUri: ./ValidateExamTask/
-            Handler: ValidateExamTask::ValidateExamTask.Function::FunctionHandler
-            Role: !Sub ${DynamoDBCrudRole.Arn}
 
-
-   ###    ########  #### 
+  ###    ########  #### 
   ## ##   ##     ##  ##  
- ##   ##  ##     ##  ##  
-##     ## ########   ##  
-######### ##         ##  
-##     ## ##         ##  
-##     ## ##        #### 
+  ##   ##  ##     ##  ##  
+  ##     ## ########   ##  
+  ######### ##         ##  
+  ##     ## ##         ##  
+  ##     ## ##        #### 
 
-    StepFunctionsAPI:
-        Type: AWS::Serverless::Api
-        Properties:
-            StageName: v1
-            DefinitionBody:
-                swagger: "2.0"
-                info:
-                    version: "1.0"
-                    title: "DevelopingWithStepFunctionsApi"
-                basePath: "/v1"
-                schemes:
-                - "https"
-                paths:
-                    /incident:
-                        post:
-                            consumes:
-                            - "application/json"
-                            produces:
-                            - "application/json"
-                            responses:
-                                "200":
-                                    description: "200 response"
-                                    schema:
-                                        $ref: "#/definitions/Empty"
-                                    headers:
-                                        Access-Control-Allow-Origin:
-                                            type: "string"
-                            x-amazon-apigateway-integration:
-                                credentials: !GetAtt ApiGatewayStepFunctionsRole.Arn
-                                uri: !Sub "arn:aws:apigateway:${AWS::Region}:states:action/StartExecution"
-                                responses:
-                                    default:
-                                        statusCode: "200"
-                                        responseParameters:
-                                            method.response.header.Access-Control-Allow-Origin: "'*'"
-                                requestTemplates:
-                                    application/json: !Sub |
-                                        {
-                                        "input": "$util.escapeJavaScript($input.json('$'))",
-                                        "name": "$context.requestId",
-                                        "stateMachineArn": "${DevelopingWithStepFunctionsStateMachine}"
-                                        }
-                                passthroughBehavior: "when_no_templates"
-                                httpMethod: "POST"
-                                type: "aws"
-                        options:
-                            consumes:
-                            - "application/json"
-                            produces:
-                            - "application/json"
-                            responses:
-                                "200":
-                                    description: "200 response"
-                                    schema:
-                                        $ref: "#/definitions/Empty"
-                                    headers:
-                                        Access-Control-Allow-Origin:
-                                            type: "string"
-                                        Access-Control-Allow-Methods:
-                                            type: "string"
-                                        Access-Control-Allow-Headers:
-                                            type: "string"
-                            x-amazon-apigateway-integration:
-                                responses:
-                                    default:
-                                        statusCode: "200"
-                                        responseParameters:
-                                            method.response.header.Access-Control-Allow-Methods: "'POST,OPTIONS'"
-                                            method.response.header.Access-Control-Allow-Headers: "'Content-Type,X-Amz-Date,Authorization,X-Api-Key,X-Amz-Security-Token'"
-                                            method.response.header.Access-Control-Allow-Origin: "'*'"
-                                requestTemplates:
-                                    application/json: "{\"statusCode\": 200}"
-                                passthroughBehavior: "when_no_match"
-                                type: "mock"
-                definitions:
-                    Empty:
-                        type: "object"
-                        title: "Empty Schema"
-         
-
- ######  ######## ######## ########     ######## ##     ## ##    ##  ######  ######## ####  #######  ##    ## 
-##    ##    ##    ##       ##     ##    ##       ##     ## ###   ## ##    ##    ##     ##  ##     ## ###   ## 
-##          ##    ##       ##     ##    ##       ##     ## ####  ## ##          ##     ##  ##     ## ####  ## 
- ######     ##    ######   ########     ######   ##     ## ## ## ## ##          ##     ##  ##     ## ## ## ## 
-      ##    ##    ##       ##           ##       ##     ## ##  #### ##          ##     ##  ##     ## ##  #### 
-##    ##    ##    ##       ##           ##       ##     ## ##   ### ##    ##    ##     ##  ##     ## ##   ### 
- ######     ##    ######## ##           ##        #######  ##    ##  ######     ##    ####  #######  ##    ##  
-
-    DevelopingWithStepFunctionsStateMachine:
-        Type: "AWS::StepFunctions::StateMachine"
-        Properties:
-            StateMachineName: DevelopingWithStepFunctionsDotNetCore
-            RoleArn: !GetAtt StepFunctionsServiceRole.Arn
-            DefinitionString: !Sub |-
-                {
-                  "StartAt": "RegisterIncident",
-                  "Comment": "Developing with AWS Step Functions Demo",
-                  "States": {
-                    "RegisterIncident": {
-                      "Type": "Task",
-                      "Comment": "Register the plagiarism incident in the system and begin workflow execution.",
-                      "Resource": "${RegisterIncidentFunction.Arn}",
-                      "Next": "ScheduleExam"
-                    },
-                    "ScheduleExam": {
-                      "Type": "Task",
-                      "Comment": "Set the next exam deadline for the student to complete the exam.",
-                      "Resource": "${ScheduleExamFunction.Arn}",
-                      "Next": "SendNotification",
-                      "Catch": [
-                        {
-                          "ErrorEquals": [
-                            "StudentExceededAllowableExamRetries"
-                          ],
-                          "ResultPath": "$.Error",
-                          "Next": "TakeAdministrativeAction"
-                        }
-                      ]
-                    },
-                    "SendNotification": {
-                      "Type": "Task",
-                      "Comment": "Send email confirmation to the student with the date the exam completion deadline.",
-                      "Resource": "${SendExamNotificationFunction.Arn}",
-                      "Next": "ExamConfirmationPending"
-                    },
-                    "ExamConfirmationPending": {
-                      "Type": "Wait",
-                      "Comment": "Waiting period exam expiration deadline.",
-                      "TimestampPath": "$.Exams[0].ExamDate",
-                      "Next": "ValidateExamResults"
-                    },
-                    "ValidateExamResults": {
-                      "Comment": "Validates the exam results.",
-                      "Type": "Task",
-                      "Resource": "${ValidateExamResultsFunction.Arn}",
-                      "Next": "HasStudentPassedExam"
-                    },
-                    "HasStudentPassedExam": {
-                      "Type": "Choice",
-                      "Comment": "If the student has a score less than 67, they need to reschedule",
-                      "Choices": [
-                        {
-                          "Variable": "$.Exams[0].Result",
-                          "NumericEquals": 0,
-                          "Next": "ResolveIncident"
-                        },
-                        {
-                          "Variable": "$.Exams[0].Result",
-                          "NumericEquals": 1,
-                          "Next": "ScheduleExam"
-                        },
-                        {
-                          "Variable": "$.Exams[0].Result",
-                          "NumericEquals": 2,
-                          "Next": "TakeAdministrativeAction"
-                        }
-                      ]
-                    },
-                    "TakeAdministrativeAction": {
-                      "Type": "Task",
-                      "Resource": "${TakeAdministrativeActionFunction.Arn}",
-                      "Comment": "Take administrative action if student does not sit exam or fails all three attempts.",
-                      "End": true
-                    },
-                    "ResolveIncident": {
-                      "Type": "Task",
-                      "Comment": "Resolves the incident for the student.",
-                      "End": true,
-                      "Resource": "${ResolveIncidentFunction.Arn}"
+  StepFunctionsAPI:
+    Type: AWS::Serverless::Api
+    Properties:
+      StageName: v1
+      DefinitionBody:
+        swagger: "2.0"
+        info:
+          version: "1.0"
+          title: "DevelopingWithStepFunctionsApi"
+        basePath: "/v1"
+        schemes:
+          - "https"
+        paths:
+          /incident:
+            post:
+              consumes:
+                - "application/json"
+              produces:
+                - "application/json"
+              responses:
+                "200":
+                  description: "200 response"
+                  schema:
+                    $ref: "#/definitions/Empty"
+                  headers:
+                    Access-Control-Allow-Origin:
+                      type: "string"
+              x-amazon-apigateway-integration:
+                credentials: !GetAtt ApiGatewayStepFunctionsRole.Arn
+                uri: !Sub "arn:aws:apigateway:${AWS::Region}:states:action/StartExecution"
+                responses:
+                  default:
+                    statusCode: "200"
+                    responseParameters:
+                      method.response.header.Access-Control-Allow-Origin: "'*'"
+                requestTemplates:
+                  application/json: !Sub |
+                    {
+                    "input": "$util.escapeJavaScript($input.json('$'))",
+                    "name": "$context.requestId",
+                    "stateMachineArn": "${DevelopingWithStepFunctionsStateMachine}"
                     }
-                  }
+                passthroughBehavior: "when_no_templates"
+                httpMethod: "POST"
+                type: "aws"
+            options:
+              consumes:
+                - "application/json"
+              produces:
+                - "application/json"
+              responses:
+                "200":
+                  description: "200 response"
+                  schema:
+                    $ref: "#/definitions/Empty"
+                  headers:
+                    Access-Control-Allow-Origin:
+                      type: "string"
+                    Access-Control-Allow-Methods:
+                      type: "string"
+                    Access-Control-Allow-Headers:
+                      type: "string"
+              x-amazon-apigateway-integration:
+                responses:
+                  default:
+                    statusCode: "200"
+                    responseParameters:
+                      method.response.header.Access-Control-Allow-Methods: "'POST,OPTIONS'"
+                      method.response.header.Access-Control-Allow-Headers: "'Content-Type,X-Amz-Date,Authorization,X-Api-Key,X-Amz-Security-Token'"
+                      method.response.header.Access-Control-Allow-Origin: "'*'"
+                requestTemplates:
+                  application/json: "{\"statusCode\": 200}"
+                passthroughBehavior: "when_no_match"
+                type: "mock"
+        definitions:
+          Empty:
+            type: "object"
+            title: "Empty Schema"
+
+
+    ######  ######## ######## ########     ######## ##     ## ##    ##  ######  ######## ####  #######  ##    ## 
+    ##    ##    ##    ##       ##     ##    ##       ##     ## ###   ## ##    ##    ##     ##  ##     ## ###   ## 
+    ##          ##    ##       ##     ##    ##       ##     ## ####  ## ##          ##     ##  ##     ## ####  ## 
+    ######     ##    ######   ########     ######   ##     ## ## ## ## ##          ##     ##  ##     ## ## ## ## 
+    ##    ##    ##       ##           ##       ##     ## ##  #### ##          ##     ##  ##     ## ##  #### 
+  ##    ##    ##    ##       ##           ##       ##     ## ##   ### ##    ##    ##     ##  ##     ## ##   ### 
+  ######     ##    ######## ##           ##        #######  ##    ##  ######     ##    ####  #######  ##    ##  
+
+  DevelopingWithStepFunctionsStateMachine:
+    Type: "AWS::StepFunctions::StateMachine"
+    Properties:
+      StateMachineName: DevelopingWithStepFunctionsDotNetCore
+      RoleArn: !GetAtt StepFunctionsServiceRole.Arn
+      DefinitionString: !Sub |-
+        {
+          "StartAt": "RegisterIncident",
+          "Comment": "Developing with AWS Step Functions Demo",
+          "States": {
+            "RegisterIncident": {
+              "Type": "Task",
+              "Comment": "Register the plagiarism incident in the system and begin workflow execution.",
+              "Resource": "${RegisterIncidentFunction.Arn}",
+              "Next": "ScheduleExam"
+            },
+            "ScheduleExam": {
+              "Type": "Task",
+              "Comment": "Set the next exam deadline for the student to complete the exam.",
+              "Resource": "${ScheduleExamFunction.Arn}",
+              "Next": "SendNotification",
+              "Catch": [
+                {
+                  "ErrorEquals": [
+                    "StudentExceededAllowableExamRetries"
+                  ],
+                  "ResultPath": "$.Error",
+                  "Next": "TakeAdministrativeAction"
                 }
+              ]
+            },
+            "SendNotification": {
+              "Type": "Task",
+              "Comment": "Send email confirming exam details and exam deadline. Wait for callback.",
+              "Resource": "arn:aws:states:::lambda:invoke.waitForTaskToken",
+              "Parameters":{
+                "FunctionName":"${SendExamNotificationFunction}",
+                "Payload":{
+                  "input.$":"$",
+                  "TaskToken.$":"$$.Task.Token"
+                }
+              },
+              "Next": "ValidateExamResults"
+            },
+            "ValidateExamResults": {
+              "Comment": "Validates the exam results.",
+              "Type": "Task",
+              "Resource": "${ValidateExamResultsFunction.Arn}",
+              "Next": "HasStudentPassedExam"
+            },
+            "HasStudentPassedExam": {
+              "Type": "Choice",
+              "Comment": "If the student has a score less than 67, they need to reschedule",
+              "Choices": [
+                {
+                  "Variable": "$.Exams[0].Result",
+                  "NumericEquals": 0,
+                  "Next": "ResolveIncident"
+                },
+                {
+                  "Variable": "$.Exams[0].Result",
+                  "NumericEquals": 1,
+                  "Next": "ScheduleExam"
+                },
+                {
+                  "Variable": "$.Exams[0].Result",
+                  "NumericEquals": 2,
+                  "Next": "TakeAdministrativeAction"
+                }
+              ]
+            },
+            "TakeAdministrativeAction": {
+              "Type": "Task",
+              "Resource": "${TakeAdministrativeActionFunction.Arn}",
+              "Comment": "Take administrative action if student does not sit exam or fails all three attempts.",
+              "End": true
+            },
+            "ResolveIncident": {
+              "Type": "Task",
+              "Comment": "Resolves the incident for the student.",
+              "End": true,
+              "Resource": "${ResolveIncidentFunction.Arn}"
+            }
+          }
+        }
 
-########  ##    ## ##    ##    ###    ##     ##  #######  ########  ########  
-##     ##  ##  ##  ###   ##   ## ##   ###   ### ##     ## ##     ## ##     ## 
-##     ##   ####   ####  ##  ##   ##  #### #### ##     ## ##     ## ##     ## 
-##     ##    ##    ## ## ## ##     ## ## ### ## ##     ## ##     ## ########  
-##     ##    ##    ##  #### ######### ##     ## ##     ## ##     ## ##     ## 
-##     ##    ##    ##   ### ##     ## ##     ## ##     ## ##     ## ##     ## 
-########     ##    ##    ## ##     ## ##     ##  #######  ########  ########  
+  ########  ##    ## ##    ##    ###    ##     ##  #######  ########  ########  
+  ##     ##  ##  ##  ###   ##   ## ##   ###   ### ##     ## ##     ## ##     ## 
+  ##     ##   ####   ####  ##  ##   ##  #### #### ##     ## ##     ## ##     ## 
+  ##     ##    ##    ## ## ## ##     ## ## ### ## ##     ## ##     ## ########  
+  ##     ##    ##    ##  #### ######### ##     ## ##     ## ##     ## ##     ## 
+  ##     ##    ##    ##   ### ##     ## ##     ## ##     ## ##     ## ##     ## 
+  ########     ##    ##    ## ##     ## ##     ##  #######  ########  ########  
 
-    IncidentsTable:
-        Type: AWS::Serverless::SimpleTable
-        Properties:
-            PrimaryKey:
-                Name: IncidentId
-                Type: String
-            ProvisionedThroughput:
-                ReadCapacityUnits: 5
-                WriteCapacityUnits: 5
+  IncidentsTable:
+    Type: AWS::Serverless::SimpleTable
+    Properties:
+      PrimaryKey:
+        Name: IncidentId
+        Type: String
+      ProvisionedThroughput:
+        ReadCapacityUnits: 5
+        WriteCapacityUnits: 5
 
 
-####    ###    ##     ## 
- ##    ## ##   ###   ### 
- ##   ##   ##  #### #### 
- ##  ##     ## ## ### ## 
- ##  ######### ##     ## 
- ##  ##     ## ##     ## 
-#### ##     ## ##     ## 
+  ####    ###    ##     ## 
+  ##    ## ##   ###   ### 
+  ##   ##   ##  #### #### 
+  ##  ##     ## ## ### ## 
+  ##  ######### ##     ## 
+  ##  ##     ## ##     ## 
+  #### ##     ## ##     ## 
 
-    ApiGatewayStepFunctionsRole:
-        Type: "AWS::IAM::Role"
-        Properties:
-            Path: !Join ["", ["/", !Ref "AWS::StackName", "/"]]
-            AssumeRolePolicyDocument:
-                Version: "2012-10-17"
-                Statement:
+  ApiGatewayStepFunctionsRole:
+    Type: "AWS::IAM::Role"
+    Properties:
+      Path: !Join ["", ["/", !Ref "AWS::StackName", "/"]]
+      AssumeRolePolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          -
+            Sid: "AllowApiGatewayServiceToAssumeRole"
+            Effect: "Allow"
+            Action:
+              - "sts:AssumeRole"
+            Principal:
+              Service:
+                - "apigateway.amazonaws.com"
+      Policies:
+        -   PolicyName: "CallStepFunctions"
+            PolicyDocument:
+              Version: '2012-10-17'
+              Statement:
                 -
-                    Sid: "AllowApiGatewayServiceToAssumeRole"
-                    Effect: "Allow"
-                    Action: 
-                    - "sts:AssumeRole"
-                    Principal:
-                        Service:
-                            - "apigateway.amazonaws.com"
-            Policies:
-                -   PolicyName: "CallStepFunctions"
-                    PolicyDocument:
-                        Version: '2012-10-17'
-                        Statement:
-                        -
-                            Effect: "Allow"
-                            Action:
-                            - "states:StartExecution"
-                            Resource: 
-                            - !Ref DevelopingWithStepFunctionsStateMachine
+                  Effect: "Allow"
+                  Action:
+                    - "states:StartExecution"
+                  Resource:
+                    - !Ref DevelopingWithStepFunctionsStateMachine
 
-    StepFunctionsServiceRole:
-        Type: "AWS::IAM::Role"
-        Properties:
-            Path: !Join ["", ["/", !Ref "AWS::StackName", "/"]]
-            ManagedPolicyArns:
-                - "arn:aws:iam::aws:policy/AWSStepFunctionsFullAccess"
-            AssumeRolePolicyDocument:
-                Version: "2012-10-17"
-                Statement:
-                    -
-                        Sid: "AllowStepFunctionsServiceToAssumeRole"
-                        Effect: "Allow"
-                        Action: 
-                            - "sts:AssumeRole"
-                        Principal:
-                            Service:
-                                - !Sub "states.${AWS::Region}.amazonaws.com"
-            Policies:
-                -   PolicyName: "CallLambdaFunctions"
-                    PolicyDocument:
-                        Version: '2012-10-17'
-                        Statement:
-                            -   Effect: "Allow"
-                                Action:
-                                    - "lambda:InvokeFunction"
-                                Resource: 
-                                    - !Sub ${RegisterIncidentFunction.Arn}
-                                    - !Sub ${ScheduleExamFunction.Arn}
-                                    - !Sub ${SendExamNotificationFunction.Arn}
-                                    - !Sub ${ValidateExamResultsFunction.Arn}
-                                    - !Sub ${ResolveIncidentFunction.Arn}
-                                    - !Sub ${TakeAdministrativeActionFunction.Arn}
-    
-    DynamoDBCrudRole:
-        Type: "AWS::IAM::Role"
-        Properties:
-            Path: !Join ["", ["/", !Ref "AWS::StackName", "/"]]
-            ManagedPolicyArns:
-                - "arn:aws:iam::aws:policy/AWSXrayWriteOnlyAccess"
-                - "arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole"
-            AssumeRolePolicyDocument:
-                Version: "2012-10-17"
-                Statement:
-                    -
-                        Sid: "AllowLambdaServiceToAssumeRole"
-                        Effect: "Allow"
-                        Action: 
-                            - "sts:AssumeRole"
-                        Principal:
-                            Service:
-                                - "lambda.amazonaws.com"
-            Policies:
-                -   PolicyName: "AllowCRUDOperationsOnDynamoDB"
-                    PolicyDocument:
-                        Version: '2012-10-17'
-                        Statement:
-                            - 
-                                Effect: "Allow"
-                                Action:
-                                - 'dynamodb:GetItem'
-                                - 'dynamodb:DeleteItem'
-                                - 'dynamodb:DescribeTable'
-                                - 'dynamodb:PutItem'
-                                - 'dynamodb:Scan'
-                                - 'dynamodb:Query'
-                                - 'dynamodb:UpdateItem'
-                                - 'dynamodb:BatchWriteItem'
-                                - 'dynamodb:BatchGetItem'
-                                Resource: 
-                                - !Sub ${IncidentsTable.Arn}
+  StepFunctionsServiceRole:
+    Type: "AWS::IAM::Role"
+    Properties:
+      Path: !Join ["", ["/", !Ref "AWS::StackName", "/"]]
+      ManagedPolicyArns:
+        - "arn:aws:iam::aws:policy/AWSStepFunctionsFullAccess"
+      AssumeRolePolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          -
+            Sid: "AllowStepFunctionsServiceToAssumeRole"
+            Effect: "Allow"
+            Action:
+              - "sts:AssumeRole"
+            Principal:
+              Service:
+                - !Sub "states.${AWS::Region}.amazonaws.com"
+      Policies:
+        -   PolicyName: "CallLambdaFunctions"
+            PolicyDocument:
+              Version: '2012-10-17'
+              Statement:
+                -   Effect: "Allow"
+                    Action:
+                      - "lambda:InvokeFunction"
+                    Resource:
+                      - !Sub ${RegisterIncidentFunction.Arn}
+                      - !Sub ${ScheduleExamFunction.Arn}
+                      - !Sub ${SendExamNotificationFunction.Arn}
+                      - !Sub ${ValidateExamResultsFunction.Arn}
+                      - !Sub ${ResolveIncidentFunction.Arn}
+                      - !Sub ${TakeAdministrativeActionFunction.Arn}
 
- ######  ##    ##  ######  
-##    ## ###   ## ##    ## 
-##       ####  ## ##       
- ######  ## ## ##  ######  
-      ## ##  ####       ## 
-##    ## ##   ### ##    ## 
- ######  ##    ##  ######  
+  DynamoDBCrudRole:
+    Type: "AWS::IAM::Role"
+    Properties:
+      Path: !Join ["", ["/", !Ref "AWS::StackName", "/"]]
+      ManagedPolicyArns:
+        - "arn:aws:iam::aws:policy/AWSXrayWriteOnlyAccess"
+        - "arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole"
+      AssumeRolePolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          -
+            Sid: "AllowLambdaServiceToAssumeRole"
+            Effect: "Allow"
+            Action:
+              - "sts:AssumeRole"
+            Principal:
+              Service:
+                - "lambda.amazonaws.com"
+      Policies:
+        -   PolicyName: "AllowCRUDOperationsOnDynamoDB"
+            PolicyDocument:
+              Version: '2012-10-17'
+              Statement:
+                -
+                  Effect: "Allow"
+                  Action:
+                    - 'dynamodb:GetItem'
+                    - 'dynamodb:DeleteItem'
+                    - 'dynamodb:DescribeTable'
+                    - 'dynamodb:PutItem'
+                    - 'dynamodb:Scan'
+                    - 'dynamodb:Query'
+                    - 'dynamodb:UpdateItem'
+                    - 'dynamodb:BatchWriteItem'
+                    - 'dynamodb:BatchGetItem'
+                  Resource:
+                    - !Sub ${IncidentsTable.Arn}
 
-    DevelopingWithStepFunctionsSNSTopic:
-        Type: AWS::SNS::Topic
-        Properties:
-            Subscription:
-            - Endpoint: !Ref NotificationEmail
-              Protocol: email
+    ######  ##    ##  ######  
+    ##    ## ###   ## ##    ## 
+    ##       ####  ## ##       
+    ######  ## ## ##  ######  
+    ## ##  ####       ## 
+  ##    ## ##   ### ##    ## 
+  ######  ##    ##  ######  
+
+#  DevelopingWithStepFunctionsSNSTopic:
+#    Type: AWS::SNS::Topic
+#    Properties:
+#      Subscription:
+#        - Endpoint: !Ref Not
+#          Protocol: email
 
 Outputs:
-    StepFunctionsAPIUrl:
-        Description: API URL
-        Value: !Sub "https://${StepFunctionsAPI}.execute-api.${AWS::Region}.amazonaws.com/v1/incident"
-    
-    StepFunctionsStateMachine:
-        Description: Step Functions State Machine ARN
-        Value: !Ref DevelopingWithStepFunctionsStateMachine
-    
-    RegisterIncidentFunctionArn:
-        Description: Register Incident Function ARN
-        Value: !GetAtt RegisterIncidentFunction.Arn
-    
-    ScheduleExamFunctionArn:
-        Description: Schedule Exam Function ARN
-        Value: !GetAtt ScheduleExamFunction.Arn
-    
-    SendExamNotificationFunctionArn:
-        Description: Send Exam Notification Function ARN
-        Value: !GetAtt SendExamNotificationFunction.Arn
-    
-    ValidateExamResultsFunctionArn:
-        Description: Validate Exam Results Function ARN
-        Value: !GetAtt ValidateExamResultsFunction.Arn
-    
-    ResolveIncidentFunctionArn:
-        Description: Resolve Incident Function ARN
-        Value: !GetAtt ResolveIncidentFunction.Arn
-    
-    TakeAdministrativeActionFunctionArn:
-        Description: Take Administrative Action Function ARN
-        Value: !GetAtt TakeAdministrativeActionFunction.Arn
+  StepFunctionsAPIUrl:
+    Description: API URL
+    Value: !Sub "https://${StepFunctionsAPI}.execute-api.${AWS::Region}.amazonaws.com/v1/incident"
+
+  StepFunctionsStateMachine:
+    Description: Step Functions State Machine ARN
+    Value: !Ref DevelopingWithStepFunctionsStateMachine
+
+  RegisterIncidentFunctionArn:
+    Description: Register Incident Function ARN
+    Value: !GetAtt RegisterIncidentFunction.Arn
+
+  ScheduleExamFunctionArn:
+    Description: Schedule Exam Function ARN
+    Value: !GetAtt ScheduleExamFunction.Arn
+
+  SendExamNotificationFunctionArn:
+    Description: Send Exam Notification Function ARN
+    Value: !GetAtt SendExamNotificationFunction.Arn
+
+  ValidateExamResultsFunctionArn:
+    Description: Validate Exam Results Function ARN
+    Value: !GetAtt ValidateExamResultsFunction.Arn
+
+  ResolveIncidentFunctionArn:
+    Description: Resolve Incident Function ARN
+    Value: !GetAtt ResolveIncidentFunction.Arn
+
+  TakeAdministrativeActionFunctionArn:
+    Description: Take Administrative Action Function ARN
+    Value: !GetAtt TakeAdministrativeActionFunction.Arn
