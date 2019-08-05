@@ -10,6 +10,7 @@
     <PackageReference Include="AWSSDK.SimpleNotificationService" Version="3.3.101.32" />
     <PackageReference Include="AWSXRayRecorder.Core" Version="2.5.2" />
     <PackageReference Include="AWSXRayRecorder.Handlers.AwsSdk" Version="2.6.2" />
+    <PackageReference Include="Sendgrid" Version="9.11.0" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\IncidentState\IncidentState.csproj" />

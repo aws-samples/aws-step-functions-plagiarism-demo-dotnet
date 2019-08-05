@@ -25,14 +25,15 @@
     },
     "SendNotification": {
       "Type": "Task",
-      "Comment": "Send email confirmation to the student with the date the exam completion deadline.",
-      "Resource": "${SendExamNotificationFunction.Arn}",
-      "Next": "ExamConfirmationPending"
-    },
-    "ExamConfirmationPending": {
-      "Type": "Wait",
-      "Comment": "Waiting period exam expiration deadline.",
-      "TimestampPath": "$.Exams[0].ExamDate",
+      "Comment": "Send email confirming exam details and exam deadline. Wait for callback.",
+      "Resource": "arn:aws:states:::lambda:invoke.waitForTaskToken",
+      "Parameters": {
+        "FunctionName": "${SendExamNotificationFunction}",
+        "Payload": {
+          "input.$": "$",
+          "TaskToken.$": "$$.Task.Token"
+        }
+      },
       "Next": "ValidateExamResults"
     },
     "ValidateExamResults": {
