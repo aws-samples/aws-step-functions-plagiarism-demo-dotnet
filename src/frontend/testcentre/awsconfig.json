@@ -1,0 +1,11 @@
+{
+  "aws_project_region": "ap-southeast-2",
+  "API": {
+    "endpoints": [
+      {
+        "name": "PlagiarismStepFunctionsDemo",
+        "endpoint": "https://1234567890-abcdefgh.amazonaws.com"
+      }
+    ]
+  }
+}

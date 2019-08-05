@@ -1,0 +1,60 @@
+{
+  "questions" : [
+    {
+      "text": "Which AWS service would you use as an object store?",
+      "answers": {
+        "s3": "S3",
+        "efs": "EFS",
+        "ebs": "EBS",
+        "appsync": "Amazon AppSync"
+      },
+      "correct_answer": "s3",
+      "question_id": "q1"
+    },
+    {
+      "text": "How many AWS services are certified to the IRAP Protected Level?",
+      "answers": {
+        "42": "42 services in Sydney, with a further 8 globally at Unclassified DLM.",
+        "all": "All services",
+        "none": "None!",
+        "ec2": "EC2, EBS, IAM, and VPC"
+      },
+      "correct_answer": "42",
+      "question_id": "q2"
+    },
+    {
+      "text": "What is an AWS region?",
+      "answers": {
+        "office": "An office where Amazon has staff",
+        "region": "A collection of 2 or more availability zones, connected by high-speed, low latency links",
+        "distcenter": "An area where you can have Amazon packages delivered",
+        "datacentre": "A data centre, full of server racks"
+      },
+      "correct_answer": "region",
+      "question_id": "q3"
+    },
+    {
+      "text": "Which AWS service is used for management identity and access?",
+      "answers": {
+        "iam": "IAM",
+        "secg": "Security Groups",
+        "nacl": "Network Access Control Lists (NACL)",
+        "external": "You need to utilise an external service, like LDAP or Active Directory, for this."
+      },
+      "correct_answer": "iam",
+      "question_id": "q4"
+    },
+    {
+      "text": "Who is the CEO of AWS?",
+      "answers": {
+        "ballmer": "Jeff Balmer",
+        "rms": "Richard Stallman",
+        "elisha": "Simon Elisha",
+        "jassy": "Andy Jassy",
+        "jeff": "Jeff Bezos"
+      },
+      "correct_answer": "jassy",
+      "question_id": "q5"
+    }
+  ]
+}
