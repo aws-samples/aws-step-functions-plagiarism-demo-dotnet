@@ -1,0 +1,18 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+    <PropertyGroup>
+        <TargetFramework>netcoreapp2.1</TargetFramework>
+        <GenerateRuntimeConfigurationFiles>true</GenerateRuntimeConfigurationFiles>
+        <AWSProjectType>Lambda</AWSProjectType>
+    </PropertyGroup>
+    <ItemGroup>
+        <PackageReference Include="Amazon.Lambda.APIGatewayEvents" Version="1.2.0" />
+        <PackageReference Include="Amazon.Lambda.Core" Version="1.1.0" />
+        <PackageReference Include="Amazon.Lambda.Serialization.Json" Version="1.5.0" />
+        <PackageReference Include="AWSSDK.StepFunctions" Version="3.3.100.58" />
+        <PackageReference Include="AWSXRayRecorder.Core" Version="2.5.2" />
+        <PackageReference Include="AWSXRayRecorder.Handlers.AwsSdk" Version="2.6.2" />
+    </ItemGroup>
+    <ItemGroup>
+      <ProjectReference Include="..\IncidentPersistence\IncidentPersistence.csproj" />
+    </ItemGroup>
+</Project>

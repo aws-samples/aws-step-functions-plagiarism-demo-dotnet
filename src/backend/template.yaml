@@ -99,13 +99,21 @@ Resources:
           FROM_EMAIL: !Ref FromEmail
           TESTING_CENTRE_URL: !Ref StudentTestingCentreUrl
           
-  ValidateExamResultsFunction:
+  SubmitExamTaskFunction:
     Type: AWS::Serverless::Function
     Properties:
-      Description: DevelopingWithStepFunctions - Validates the exam results.
-      CodeUri: ./ValidateExamTask/
-      Handler: ValidateExamTask::ValidateExamTask.Function::FunctionHandler
+      Description: DevelopingWithDotNetStepFunctions - Saves the test results and invokes the callback to the SendExamNotification state in the Step Function
+      CodeUri: ./SubmitExamTask
+      Handler: SubmitExamTask::SubmitExamTask.Function::FunctionHandler
       Role: !Sub ${DynamoDBCrudRole.Arn}
+      
+#  ValidateExamResultsFunction:
+#    Type: AWS::Serverless::Function
+#    Properties:s
+#      Description: DevelopingWithStepFunctions - Validates the exam results.
+#      CodeUri: ./ValidateExamTask/
+#      Handler: ValidateExamTask::ValidateExamTask.Function::FunctionHandler
+#      Role: !Sub ${DynamoDBCrudRole.Arn}
 
 
   ###    ########  #### 
@@ -246,12 +254,6 @@ Resources:
                   "TaskToken.$":"$$.Task.Token"
                 }
               },
-              "Next": "ValidateExamResults"
-            },
-            "ValidateExamResults": {
-              "Comment": "Validates the exam results.",
-              "Type": "Task",
-              "Resource": "${ValidateExamResultsFunction.Arn}",
               "Next": "HasStudentPassedExam"
             },
             "HasStudentPassedExam": {
