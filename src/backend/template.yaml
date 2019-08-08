@@ -375,7 +375,7 @@ Resources:
                       - !Sub ${RegisterIncidentFunction.Arn}
                       - !Sub ${ScheduleExamFunction.Arn}
                       - !Sub ${SendExamNotificationFunction.Arn}
-                      - !Sub ${ValidateExamResultsFunction.Arn}
+                      - !Sub ${SubmitExamTaskFunction.Arn}
                       - !Sub ${ResolveIncidentFunction.Arn}
                       - !Sub ${TakeAdministrativeActionFunction.Arn}
 
@@ -452,10 +452,14 @@ Outputs:
   SendExamNotificationFunctionArn:
     Description: Send Exam Notification Function ARN
     Value: !GetAtt SendExamNotificationFunction.Arn
+    
+  SubmitExamTaskFunctionArn:
+    Description: Submit Exam Function Function ARN
+    Value: !GetAtt SubmitExamTaskFunction.Arn
 
-  ValidateExamResultsFunctionArn:
-    Description: Validate Exam Results Function ARN
-    Value: !GetAtt ValidateExamResultsFunction.Arn
+#  ValidateExamResultsFunctionArn:
+#    Description: Validate Exam Results Function ARN
+#    Value: !GetAtt ValidateExamResultsFunction.Arn
 
   ResolveIncidentFunctionArn:
     Description: Resolve Incident Function ARN
