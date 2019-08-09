@@ -5,8 +5,8 @@ using Amazon.DynamoDBv2;
 using Amazon.Lambda.APIGatewayEvents;
 using Amazon.Lambda.TestUtilities;
 using Amazon.StepFunctions;
-using IncidentState;
 using Newtonsoft.Json;
+using Plagiarism;
 using SubmitExamTask;
 using Xunit;
 using Xunit.Abstractions;
@@ -27,7 +27,7 @@ namespace ValidateExamTask.Tests
         [Fact]
         public void TestResults()
         {
-            var state = new State
+            var state = new Incident
             {
                 IncidentId = Guid.NewGuid(),
                 StudentId = "123",

@@ -1,7 +1,7 @@
 using System;
 using Amazon.Lambda.Core;
 using Amazon.XRay.Recorder.Handlers.AwsSdk;
-using IncidentState;
+using Plagiarism;
 
 // Assembly attribute to enable the Lambda function's JSON input to be converted into a .NET class.
 [assembly: LambdaSerializer(typeof(Amazon.Lambda.Serialization.Json.JsonSerializer))]
@@ -21,22 +21,22 @@ namespace ScheduleExamTask
         /// Student cannot take more than 3 exams so throw customer exception
         /// if this business rule is met.
         /// </summary>
-        /// <param name="state">Incident State object</param>
+        /// <param name="incident">Incident State object</param>
         /// <param name="context">Lambda Context</param>
         /// <returns></returns>
-        public State FunctionHandler(State state, ILambdaContext context)
+        public Incident FunctionHandler(Incident incident, ILambdaContext context)
         {
             var exam = new Exam(Guid.NewGuid(), DateTime.Now.AddSeconds(10), 0);
 
-            if (state.Exams != null && state.Exams.Count >= 3)
+            if (incident.Exams != null && incident.Exams.Count >= 3)
             {
                 throw new StudentExceededAllowableExamRetries("Student cannot take more that 3 exams.");
             }
 
             // Always add latest exam to the top of the list so we can reference it in the state-machine definition.
-            state.Exams?.Insert(0, exam);
+            incident.Exams?.Insert(0, exam);
 
-            return state;
+            return incident;
         }
     }
 }

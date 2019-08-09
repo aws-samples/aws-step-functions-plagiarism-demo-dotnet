@@ -1,6 +1,6 @@
 using System;
 
-namespace IncidentState
+namespace Plagiarism
 {
     public class IncidentNotFoundException : Exception
     {

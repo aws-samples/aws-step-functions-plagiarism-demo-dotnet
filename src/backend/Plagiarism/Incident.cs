@@ -1,15 +1,15 @@
 ﻿using System;
 using System.Collections.Generic;
 
-namespace IncidentState
+namespace Plagiarism
 {
-    public class StateWrapper
+    public class IncidentWrapper
     {
-        public State Input { get; set; }
+        public Incident Input { get; set; }
         public string TaskToken { get; set; }
     }
 
-    public class State
+    public class Incident
     {
         public string StudentId { get; set; }
         public Guid IncidentId { get; set; }

@@ -1,8 +1,8 @@
 using System;
 using Amazon.Lambda.Core;
 using Amazon.XRay.Recorder.Handlers.AwsSdk;
-using IncidentPersistence;
-using IncidentState;
+using Plagiarism;
+using PlagiarismRepository;
 
 // Assembly attribute to enable the Lambda function's JSON state to be converted into a .NET class.
 [assembly: LambdaSerializer(typeof(Amazon.Lambda.Serialization.Json.JsonSerializer))]
@@ -28,16 +28,16 @@ namespace ResolveIncidentTask
         /// Function to resolve the incident and cpmplete the workflow.
         /// All state data is persisted.
         /// </summary>
-        /// <param name="state"></param>
+        /// <param name="incident"></param>
         /// <param name="context"></param>
         /// <returns></returns>
-        public void FunctionHandler(State state, ILambdaContext context)
+        public void FunctionHandler(Incident incident, ILambdaContext context)
         {
-            state.AdminActionRequired = false;
-            state.IncidentResolved = true;
-            state.ResolutionDate = DateTime.Now;
+            incident.AdminActionRequired = false;
+            incident.IncidentResolved = true;
+            incident.ResolutionDate = DateTime.Now;
 
-            _incidentRepository.SaveIncident(state);
+            _incidentRepository.SaveIncident(incident);
         }
     }
 

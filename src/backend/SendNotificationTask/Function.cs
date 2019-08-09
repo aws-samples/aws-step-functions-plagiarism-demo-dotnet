@@ -5,7 +5,7 @@ using System.Threading.Tasks;
 using Amazon.Lambda.Core;
 using Amazon.XRay.Recorder.Core;
 using Amazon.XRay.Recorder.Handlers.AwsSdk;
-using IncidentState;
+using Plagiarism;
 using SendGrid;
 using SendGrid.Helpers.Mail;
 
@@ -37,7 +37,7 @@ namespace SendNotificationTask
         /// <param name="wrapper"></param>
         /// <param name="context"></param>
         /// <returns></returns>
-        public void FunctionHandler(StateWrapper wrapper, ILambdaContext context)
+        public void FunctionHandler(IncidentWrapper wrapper, ILambdaContext context)
         {
             var nextExam = wrapper.Input.Exams.FirstOrDefault();
             var studentId = wrapper.Input.StudentId;

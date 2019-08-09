@@ -2,9 +2,9 @@
 using System.Collections.Generic;
 using Xunit;
 using Amazon.Lambda.TestUtilities;
-using IncidentPersistence;
-using IncidentState;
 using NSubstitute;
+using Plagiarism;
+using PlagiarismRepository;
 
 namespace ResolveIncidentTask.Tests
 {
@@ -24,7 +24,7 @@ namespace ResolveIncidentTask.Tests
             var function = new Function(incidentRepository);
             var context = new TestLambdaContext();
 
-            var state = new State
+            var state = new Incident
             {
                 IncidentId = Guid.NewGuid(),
                 StudentId = "123",

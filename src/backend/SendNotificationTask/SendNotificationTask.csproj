@@ -12,6 +12,6 @@
     <PackageReference Include="Sendgrid" Version="9.11.0" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\IncidentState\IncidentState.csproj" />
+    <ProjectReference Include="..\Plagiarism\Plagiarism.csproj" />
   </ItemGroup>
 </Project>

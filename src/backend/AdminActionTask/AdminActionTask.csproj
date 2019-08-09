@@ -12,7 +12,7 @@
     <PackageReference Include="AWSXRayRecorder.Handlers.AwsSdk" Version="2.7.0" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\IncidentPersistence\IncidentPersistence.csproj" />
-    <ProjectReference Include="..\IncidentState\IncidentState.csproj" />
+    <ProjectReference Include="..\PlagiarismRepository\PlagiarismRepository.csproj" />
+    <ProjectReference Include="..\Plagiarism\Plagiarism.csproj" />
   </ItemGroup>
 </Project>

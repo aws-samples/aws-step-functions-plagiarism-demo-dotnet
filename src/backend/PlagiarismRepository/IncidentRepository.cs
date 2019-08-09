@@ -3,9 +3,9 @@ using System.Threading.Tasks;
 using Amazon;
 using Amazon.DynamoDBv2;
 using Amazon.DynamoDBv2.DataModel;
-using IncidentState;
+using Plagiarism;
 
-namespace IncidentPersistence
+namespace PlagiarismRepository
 {
     public class IncidentRepository : IIncidentRepository
     {
@@ -21,7 +21,7 @@ namespace IncidentPersistence
             if (!string.IsNullOrEmpty(tableName))
             {     
                 _tableName = tableName;
-                AWSConfigsDynamoDB.Context.TypeMappings[typeof(State)] = new Amazon.Util.TypeMapping(typeof(State), tableName);
+                AWSConfigsDynamoDB.Context.TypeMappings[typeof(Incident)] = new Amazon.Util.TypeMapping(typeof(Incident), tableName);
             }
             
             var config = new DynamoDBContextConfig {Conversion = DynamoDBEntryConversion.V2};
@@ -38,17 +38,17 @@ namespace IncidentPersistence
             if (!string.IsNullOrEmpty(tableName))
             {  
                 _tableName = tableName;
-                AWSConfigsDynamoDB.Context.TypeMappings[typeof(State)] = new Amazon.Util.TypeMapping(typeof(State), tableName);
+                AWSConfigsDynamoDB.Context.TypeMappings[typeof(Incident)] = new Amazon.Util.TypeMapping(typeof(Incident), tableName);
             }
             
             var config = new DynamoDBContextConfig {Conversion = DynamoDBEntryConversion.V2};
             _dynamoDbContext = new DynamoDBContext(ddbClient, config);
         }
 
-        public async Task<State> GetIncidentById(Guid incidentId)
+        public async Task<Incident> GetIncidentById(Guid incidentId)
         {
             Console.WriteLine($"Getting blog {incidentId}");
-            var state = await _dynamoDbContext.LoadAsync<State>(incidentId);
+            var state = await _dynamoDbContext.LoadAsync<Incident>(incidentId);
             Console.WriteLine($"Found blog: {state != null}");
 
             if (state == null)
@@ -62,15 +62,15 @@ namespace IncidentPersistence
         /// <summary>
         /// 
         /// </summary>
-        /// <param name="state"></param>
+        /// <param name="incident"></param>
         /// <returns>Instance of State </returns>
-        public async Task<State> SaveIncident(State state)
+        public async Task<Incident> SaveIncident(Incident incident)
         {
             try
             {
-                Console.WriteLine($"Saving blog with id {state.IncidentId}");
-                await _dynamoDbContext.SaveAsync(state);
-                return state;
+                Console.WriteLine($"Saving blog with id {incident.IncidentId}");
+                await _dynamoDbContext.SaveAsync(incident);
+                return incident;
             }
             catch (AmazonDynamoDBException e)
             {

@@ -4,10 +4,11 @@ using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using Xunit;
-using IncidentState;
 using Amazon;
 using Amazon.DynamoDBv2;
 using Amazon.DynamoDBv2.Model;
+using Plagiarism;
+using PlagiarismRepository;
 
 namespace IncidentPersistence.Tests
 {
@@ -30,7 +31,7 @@ namespace IncidentPersistence.Tests
         {
             _incidentRepository = new IncidentRepository(_dynamoDbClient, _tableName);
 
-            var state = new State
+            var state = new Incident
             {
                 IncidentId = Guid.NewGuid(),
                 StudentId = "123",
@@ -53,7 +54,7 @@ namespace IncidentPersistence.Tests
         {
             _incidentRepository = new IncidentRepository(_dynamoDbClient, _tableName);
 
-            var state = new State
+            var state = new Incident
             {
                 IncidentId = Guid.NewGuid(),
                 StudentId = "123",
@@ -81,7 +82,7 @@ namespace IncidentPersistence.Tests
         {
             _incidentRepository = new IncidentRepository(_dynamoDbClient, _tableName);
 
-            var state = new State
+            var state = new Incident
             {
                 IncidentId = Guid.NewGuid(),
                 StudentId = "123",

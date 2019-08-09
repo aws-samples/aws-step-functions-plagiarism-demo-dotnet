@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using Amazon.Lambda.TestUtilities;
-using IncidentState;
+using Plagiarism;
 using Xunit;
 
 namespace SendNotificationTask.Tests
@@ -9,15 +9,15 @@ namespace SendNotificationTask.Tests
     public class FunctionTests
     {
         private readonly TestLambdaContext _context;
-        private readonly StateWrapper _stateIn;
+        private readonly IncidentWrapper _incidentIn;
 
         public FunctionTests()
         {
             _context = new TestLambdaContext();
 
-            _stateIn = new StateWrapper()
+            _incidentIn = new IncidentWrapper()
             {
-                Input = new State
+                Input = new Incident
                 {
                     IncidentId = Guid.NewGuid(),
                     StudentId = "123",
@@ -38,7 +38,7 @@ namespace SendNotificationTask.Tests
         public void NotificationSentSouldBeFalseIfSnsPublishSucceeds()
         {
             var function = new Function();
-            function.FunctionHandler(_stateIn, _context);
+            function.FunctionHandler(_incidentIn, _context);
 
             //Assert.True(response.Exams[0].NotificationSent == true);
         }
@@ -49,7 +49,7 @@ namespace SendNotificationTask.Tests
 
             var function = new Function();
 
-            function.FunctionHandler(_stateIn, _context);
+            function.FunctionHandler(_incidentIn, _context);
 
              // Assert.True(response.Exams[0].NotificationSent == false);
         }
