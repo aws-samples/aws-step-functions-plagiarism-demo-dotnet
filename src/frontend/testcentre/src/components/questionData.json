@@ -1,59 +1,52 @@
 {
   "questions" : [
     {
-      "text": "Which AWS service would you use as an object store?",
+      "text": "What is Plagiarism?",
       "answers": {
-        "s3": "S3",
-        "efs": "EFS",
-        "ebs": "EBS",
-        "appsync": "Amazon AppSync"
+        "q1a": "Borrowing an original idea and presenting it as a new idea",
+        "q1b": "A way of writting",
+        "q1c": "A new type of tropical disease",
+        "q1d": "Ethical behavior"
       },
-      "correct_answer": "s3",
+      "correct_answer": "q1a",
       "question_id": "q1"
     },
     {
-      "text": "How many AWS services are certified to the IRAP Protected Level?",
+      "text": "Is it acceptable to copy-and-paste a sentence written by someone else into your paper and simply add quotation marks around it?",
       "answers": {
-        "42": "42 services in Sydney, with a further 8 globally at Unclassified DLM.",
-        "all": "All services",
-        "none": "None!",
-        "ec2": "EC2, EBS, IAM, and VPC"
+        "q2a": "Yes, that shows it is not original text",
+        "q2b": "No, that is incomplete citation"
       },
-      "correct_answer": "42",
+      "correct_answer": "q2b",
       "question_id": "q2"
     },
     {
-      "text": "What is an AWS region?",
+      "text": "Paraphrasing properly is to:",
       "answers": {
-        "office": "An office where Amazon has staff",
-        "region": "A collection of 2 or more availability zones, connected by high-speed, low latency links",
-        "distcenter": "An area where you can have Amazon packages delivered",
-        "datacentre": "A data centre, full of server racks"
+        "q3q": "Change a few words to make it your own and cite it",
+        "q3b": "Put quotation marks around the text and cite it",
+        "q3c": "Use only the idea without citing it",
+        "q3d": "Summarize the text in your own words and cite it"
       },
-      "correct_answer": "region",
+      "correct_answer": "q3d",
       "question_id": "q3"
     },
     {
-      "text": "Which AWS service is used for management identity and access?",
+      "text": "You re-use paragraphs from a paper you wrote last semester and put it into a new assignment, and you don’t cite it because it’s your own work. Is this plagiarism?",
       "answers": {
-        "iam": "IAM",
-        "secg": "Security Groups",
-        "nacl": "Network Access Control Lists (NACL)",
-        "external": "You need to utilise an external service, like LDAP or Active Directory, for this."
+        "q4a": "Yes, it is self-plagiarism.",
+        "q4b": "No, it isn't plagiarism"
       },
-      "correct_answer": "iam",
+      "correct_answer": "q4a",
       "question_id": "q4"
     },
     {
-      "text": "Who is the CEO of AWS?",
+      "text": "A source doesn’t need to be cited if it’s collaboratively written on the web like Wikipedia",
       "answers": {
-        "ballmer": "Jeff Balmer",
-        "rms": "Richard Stallman",
-        "elisha": "Simon Elisha",
-        "jassy": "Andy Jassy",
-        "jeff": "Jeff Bezos"
+        "q5a": "True",
+        "q5b": "False"
       },
-      "correct_answer": "jassy",
+      "correct_answer": "q5b",
       "question_id": "q5"
     }
   ]
