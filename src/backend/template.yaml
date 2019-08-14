@@ -106,14 +106,13 @@ Resources:
       CodeUri: ./SubmitExamTask
       Handler: SubmitExamTask::SubmitExamTask.Function::FunctionHandler
       Role: !Sub ${DynamoDBCrudRole.Arn}
-      
-#  ValidateExamResultsFunction:
-#    Type: AWS::Serverless::Function
-#    Properties:s
-#      Description: DevelopingWithStepFunctions - Validates the exam results.
-#      CodeUri: ./ValidateExamTask/
-#      Handler: ValidateExamTask::ValidateExamTask.Function::FunctionHandler
-#      Role: !Sub ${DynamoDBCrudRole.Arn}
+      Events:
+        StepApi:
+          Type: Api
+          Properties:
+            Path: /exam
+            Method: post
+            RestApiId: !Ref StepFunctionsAPI
 
 
   ###    ########  #### 
@@ -137,6 +136,42 @@ Resources:
         schemes:
           - "https"
         paths:
+          /exam:
+            post:
+              produces:
+              - "application/json"
+              responses:
+                "200":
+                  description: "200 response"
+                  schema:
+                    $ref: "#/definitions/Empty"
+              x-amazon-apigateway-integration:
+                uri: !Sub "arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${SubmitExamTaskFunction.Arn}/invocations"
+                responses:
+                  default:
+                    statusCode: "200"
+                passthroughBehavior: "when_no_match"
+                httpMethod: "POST"
+                contentHandling: "CONVERT_TO_TEXT"
+                type: "aws_proxy"
+            options:
+              consumes:
+              - "application/json"
+              produces:
+              - "application/json"
+              responses:
+                "200":
+                  description: "200 response"
+                  schema:
+                    $ref: "#/definitions/Empty"
+              x-amazon-apigateway-integration:
+                responses:
+                  default:
+                    statusCode: "200"
+                passthroughBehavior: "when_no_match"
+                requestTemplates:
+                  application/json: "{\"statusCode\": 200}"
+                type: "mock"
           /incident:
             post:
               consumes:

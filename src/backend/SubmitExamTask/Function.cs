@@ -43,10 +43,10 @@ namespace SubmitExamTask
         public APIGatewayProxyResponse FunctionHandler(APIGatewayProxyRequest request, ILambdaContext context)
         {
             var body = JsonConvert.DeserializeObject<Dictionary<string, string>>(request?.Body);
-            var incidentId = Guid.Parse(body["iid"]);
-            var examId = Guid.Parse(body["eid"]);
-            var score = Convert.ToInt32(body["score"]);
-            var token = body["tt"];
+            var incidentId = Guid.Parse(body["IncidentId"]);
+            var examId = Guid.Parse(body["ExamId"]);
+            var score = Convert.ToInt32(body["Score"]);
+            var token = body["TaskToken"];
 
             var incident = _incidentRepository.GetIncidentById(incidentId).Result;
             var exam = incident.Exams.Find(e => e.ExamId == examId);
