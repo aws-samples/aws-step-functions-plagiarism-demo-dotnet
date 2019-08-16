@@ -102,10 +102,11 @@ namespace IncidentPersistence.Tests
             Assert.NotNull(newIncident);
             Assert.True(newIncident.IncidentId == incident.IncidentId, "Should be teh same incident");
         }
-/// <summary>
-/// Helper function to create a testing table
-/// </summary>
-/// <returns></returns>
+
+        /// <summary>
+        /// Helper function to create a testing table
+        /// </summary>
+        /// <returns></returns>
         private async Task SetupTableAsync()
         {
             var listTablesResponse = await _dynamoDbClient.ListTablesAsync(new ListTablesRequest());

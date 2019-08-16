@@ -126,13 +126,13 @@ Resources:
   StepFunctionsAPI:
     Type: AWS::Serverless::Api
     Properties:
-      StageName: v1
+      StageName: v2
       DefinitionBody:
         swagger: "2.0"
         info:
-          version: "1.0"
+          version: "1.1"
           title: "DevelopingWithStepFunctionsApi"
-        basePath: "/v1"
+        basePath: "/v2"
         schemes:
           - "https"
         paths:

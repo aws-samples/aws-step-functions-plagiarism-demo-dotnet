@@ -1,4 +1,5 @@
 using System;
+using Amazon.DynamoDBv2;
 using Amazon.Lambda.Core;
 using Amazon.XRay.Recorder.Handlers.AwsSdk;
 using Plagiarism;
@@ -19,9 +20,15 @@ namespace ResolveIncidentTask
             _incidentRepository = new IncidentRepository(Environment.GetEnvironmentVariable("TABLE_NAME"));
         }
 
-        public Function(IIncidentRepository incidentRepository)
+        /// <summary>
+        /// Constructor used for testing purposes
+        /// </summary>
+        /// <param name="ddbClient">Instance of DynamoDB client</param>
+        /// <param name="tablename">DynamoDB table name</param>
+        public Function(IAmazonDynamoDB ddbClient, string tablename)
         {
-            _incidentRepository = incidentRepository;
+            AWSSDKHandler.RegisterXRayForAllServices();
+            _incidentRepository = new IncidentRepository(ddbClient, tablename);
         }
 
         /// <summary>
