@@ -6,10 +6,10 @@
   </PropertyGroup>
   <ItemGroup>
     <PackageReference Include="Amazon.Lambda.Core" Version="1.1.0" />
-    <PackageReference Include="Amazon.Lambda.Serialization.Json" Version="1.5.0" />
+    <PackageReference Include="Amazon.Lambda.Serialization.Json" Version="1.6.0" />
     <PackageReference Include="AWSXRayRecorder.Core" Version="2.6.0" />
     <PackageReference Include="AWSXRayRecorder.Handlers.AwsSdk" Version="2.7.0" />
-    <PackageReference Include="Sendgrid" Version="9.11.0" />
+    <PackageReference Include="Sendgrid" Version="9.12.0" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\Plagiarism\Plagiarism.csproj" />

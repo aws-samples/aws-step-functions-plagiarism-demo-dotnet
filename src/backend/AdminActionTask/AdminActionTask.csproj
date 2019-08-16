@@ -6,8 +6,8 @@
   </PropertyGroup>
   <ItemGroup>
     <PackageReference Include="Amazon.Lambda.Core" Version="1.1.0" />
-    <PackageReference Include="Amazon.Lambda.Serialization.Json" Version="1.5.0" />
-    <PackageReference Include="AWSSDK.DynamoDBv2" Version="3.3.101.34" />
+    <PackageReference Include="Amazon.Lambda.Serialization.Json" Version="1.6.0" />
+    <PackageReference Include="AWSSDK.DynamoDBv2" Version="3.3.101.55" />
     <PackageReference Include="AWSXRayRecorder.Core" Version="2.6.0" />
     <PackageReference Include="AWSXRayRecorder.Handlers.AwsSdk" Version="2.7.0" />
   </ItemGroup>
