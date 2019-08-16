@@ -3,37 +3,33 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
+using Xunit;
 using Amazon;
 using Amazon.DynamoDBv2;
 using Amazon.DynamoDBv2.Model;
-using Xunit;
-using Amazon.Lambda.TestUtilities;
-using NSubstitute;
 using Plagiarism;
 using PlagiarismRepository;
 
-namespace ResolveIncidentTask.Tests
+namespace IncidentPersistence.Tests
 {
-    public class FunctionTests
+    public class RepositoryTests
     {
-        private readonly IAmazonDynamoDB _dynamoDbClient;
         private const string TablePrefix = "IncidentsTestTable-";
         private string _tableName;
-        
-        public FunctionTests()
+        private readonly IAmazonDynamoDB _dynamoDbClient;
+        private IIncidentRepository _incidentRepository;
+
+
+        public RepositoryTests()
         {
             _dynamoDbClient = new AmazonDynamoDBClient(RegionEndpoint.APSoutheast2);
+            SetupTableAsync().Wait();
         }
 
         [Fact]
-        public void ResolveIncidentFunctionTest()
+        public async Task SaveIncidentAsync()
         {
-            var incidentRepository
-                = Substitute.For<IIncidentRepository>();
-
-
-            var function = new Function(_dynamoDbClient, _tableName);
-            var context = new TestLambdaContext();
+            _incidentRepository = new IncidentRepository(_dynamoDbClient, _tableName);
 
             var state = new Incident
             {
@@ -42,19 +38,71 @@ namespace ResolveIncidentTask.Tests
                 IncidentDate = new DateTime(2018, 02, 03),
                 Exams = new List<Exam>()
                 {
-                    new Exam(Guid.NewGuid(), new DateTime(2018, 02, 10), 10),
-                    new Exam(Guid.NewGuid(), new DateTime(2018, 02, 17), 65)
+                    new Exam(Guid.NewGuid(), new DateTime(2018, 02, 17), 0),
+                    new Exam(Guid.NewGuid(), new DateTime(2018, 02, 10), 65)
                 },
                 ResolutionDate = null
             };
 
+            var incident = await _incidentRepository.SaveIncident(state);
 
-            incidentRepository.SaveIncident(state);
-            incidentRepository.ReceivedCalls();
-
-            function.FunctionHandler(state, context);
+            Assert.NotNull(incident);
         }
-        
+
+        [Fact]
+        public async Task UpdateIncidentAsync()
+        {
+            _incidentRepository = new IncidentRepository(_dynamoDbClient, _tableName);
+
+            var state = new Incident
+            {
+                IncidentId = Guid.NewGuid(),
+                StudentId = "123",
+                IncidentDate = new DateTime(2018, 02, 03),
+            };
+
+            var incident = await _incidentRepository.SaveIncident(state);
+
+            incident.Exams = new List<Exam>
+            {
+                new Exam(Guid.NewGuid(), new DateTime(2018, 02, 17), 0),
+                new Exam(Guid.NewGuid(), new DateTime(2018, 02, 10), 65),
+                new Exam(Guid.NewGuid(), new DateTime(2018, 02, 17), 99)
+            };
+
+            var updatedIncident = await _incidentRepository.SaveIncident(state);
+
+            Assert.NotNull(incident);
+            Assert.True(updatedIncident.Exams.Count == 3, "Should be three");
+        }
+
+
+        [Fact]
+        public async Task FindIncidentAsync()
+        {
+            _incidentRepository = new IncidentRepository(_dynamoDbClient, _tableName);
+
+            var state = new Incident
+            {
+                IncidentId = Guid.NewGuid(),
+                StudentId = "123",
+                IncidentDate = new DateTime(2018, 02, 03),
+                Exams = new List<Exam>()
+                {
+                    new Exam(Guid.NewGuid(), new DateTime(2018, 02, 17), 0),
+                    new Exam(Guid.NewGuid(), new DateTime(2018, 02, 10), 65)
+                },
+                ResolutionDate = null
+            };
+
+            var incident = await _incidentRepository.SaveIncident(state);
+
+            var newIncident = await _incidentRepository.GetIncidentById(incident.IncidentId);
+
+            Assert.NotNull(newIncident);
+            Assert.True(newIncident.IncidentId == incident.IncidentId, "Should be teh same incident");
+        }
+
         /// <summary>
         /// Helper function to create a testing table
         /// </summary>

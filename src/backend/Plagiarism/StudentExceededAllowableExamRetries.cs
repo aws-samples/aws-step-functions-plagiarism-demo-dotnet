@@ -1,6 +1,6 @@
 ﻿using System;
 
-namespace IncidentState
+namespace Plagiarism
 {
     /// <summary>
     /// Custom Exception for students that have exceeded the allowable number of exam retries.

@@ -99,13 +99,20 @@ Resources:
           FROM_EMAIL: !Ref FromEmail
           TESTING_CENTRE_URL: !Ref StudentTestingCentreUrl
           
-  ValidateExamResultsFunction:
+  SubmitExamTaskFunction:
     Type: AWS::Serverless::Function
     Properties:
-      Description: DevelopingWithStepFunctions - Validates the exam results.
-      CodeUri: ./ValidateExamTask/
-      Handler: ValidateExamTask::ValidateExamTask.Function::FunctionHandler
+      Description: DevelopingWithDotNetStepFunctions - Saves the test results and invokes the callback to the SendExamNotification state in the Step Function
+      CodeUri: ./SubmitExamTask
+      Handler: SubmitExamTask::SubmitExamTask.Function::FunctionHandler
       Role: !Sub ${DynamoDBCrudRole.Arn}
+      Events:
+        StepApi:
+          Type: Api
+          Properties:
+            Path: /exam
+            Method: post
+            RestApiId: !Ref StepFunctionsAPI
 
 
   ###    ########  #### 
@@ -119,16 +126,52 @@ Resources:
   StepFunctionsAPI:
     Type: AWS::Serverless::Api
     Properties:
-      StageName: v1
+      StageName: v2
       DefinitionBody:
         swagger: "2.0"
         info:
-          version: "1.0"
+          version: "1.1"
           title: "DevelopingWithStepFunctionsApi"
-        basePath: "/v1"
+        basePath: "/v2"
         schemes:
           - "https"
         paths:
+          /exam:
+            post:
+              produces:
+              - "application/json"
+              responses:
+                "200":
+                  description: "200 response"
+                  schema:
+                    $ref: "#/definitions/Empty"
+              x-amazon-apigateway-integration:
+                uri: !Sub "arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${SubmitExamTaskFunction.Arn}/invocations"
+                responses:
+                  default:
+                    statusCode: "200"
+                passthroughBehavior: "when_no_match"
+                httpMethod: "POST"
+                contentHandling: "CONVERT_TO_TEXT"
+                type: "aws_proxy"
+            options:
+              consumes:
+              - "application/json"
+              produces:
+              - "application/json"
+              responses:
+                "200":
+                  description: "200 response"
+                  schema:
+                    $ref: "#/definitions/Empty"
+              x-amazon-apigateway-integration:
+                responses:
+                  default:
+                    statusCode: "200"
+                passthroughBehavior: "when_no_match"
+                requestTemplates:
+                  application/json: "{\"statusCode\": 200}"
+                type: "mock"
           /incident:
             post:
               consumes:
@@ -246,12 +289,6 @@ Resources:
                   "TaskToken.$":"$$.Task.Token"
                 }
               },
-              "Next": "ValidateExamResults"
-            },
-            "ValidateExamResults": {
-              "Comment": "Validates the exam results.",
-              "Type": "Task",
-              "Resource": "${ValidateExamResultsFunction.Arn}",
               "Next": "HasStudentPassedExam"
             },
             "HasStudentPassedExam": {
@@ -373,7 +410,7 @@ Resources:
                       - !Sub ${RegisterIncidentFunction.Arn}
                       - !Sub ${ScheduleExamFunction.Arn}
                       - !Sub ${SendExamNotificationFunction.Arn}
-                      - !Sub ${ValidateExamResultsFunction.Arn}
+                      - !Sub ${SubmitExamTaskFunction.Arn}
                       - !Sub ${ResolveIncidentFunction.Arn}
                       - !Sub ${TakeAdministrativeActionFunction.Arn}
 
@@ -450,10 +487,14 @@ Outputs:
   SendExamNotificationFunctionArn:
     Description: Send Exam Notification Function ARN
     Value: !GetAtt SendExamNotificationFunction.Arn
+    
+  SubmitExamTaskFunctionArn:
+    Description: Submit Exam Function Function ARN
+    Value: !GetAtt SubmitExamTaskFunction.Arn
 
-  ValidateExamResultsFunctionArn:
-    Description: Validate Exam Results Function ARN
-    Value: !GetAtt ValidateExamResultsFunction.Arn
+#  ValidateExamResultsFunctionArn:
+#    Description: Validate Exam Results Function ARN
+#    Value: !GetAtt ValidateExamResultsFunction.Arn
 
   ResolveIncidentFunctionArn:
     Description: Resolve Incident Function ARN

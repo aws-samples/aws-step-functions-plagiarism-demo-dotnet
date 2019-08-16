@@ -2,7 +2,7 @@ using System;
 using System.Collections.Generic;
 using Amazon.Lambda.Core;
 using Amazon.XRay.Recorder.Handlers.AwsSdk;
-using IncidentState;
+using Plagiarism;
 
 
 // Assembly attribute to enable the Lambda function's JSON input to be converted into a .NET class.
@@ -20,17 +20,17 @@ namespace RegisterIncidentTask
         /// <summary>
         /// A simple function that takes a string and does a ToUpper
         /// </summary>
-        /// <param name="state"></param>
+        /// <param name="incident"></param>
         /// <param name="context"></param>
         /// <returns></returns>
-        public State FunctionHandler(State state, ILambdaContext context)
+        public Incident FunctionHandler(Incident incident, ILambdaContext context)
         {
 
-            state.IncidentId = Guid.NewGuid();
-            state.Exams = new List<Exam>();
-            state.IncidentResolved = false;
+            incident.IncidentId = Guid.NewGuid();
+            incident.Exams = new List<Exam>();
+            incident.IncidentResolved = false;
 
-            return state;
+            return incident;
 
         }
     }

@@ -5,7 +5,7 @@ using System.Threading.Tasks;
 using Amazon.Lambda.Core;
 using Amazon.XRay.Recorder.Core;
 using Amazon.XRay.Recorder.Handlers.AwsSdk;
-using IncidentState;
+using Plagiarism;
 using SendGrid;
 using SendGrid.Helpers.Mail;
 
@@ -37,15 +37,16 @@ namespace SendNotificationTask
         /// <param name="wrapper"></param>
         /// <param name="context"></param>
         /// <returns></returns>
-        public void FunctionHandler(StateWrapper wrapper, ILambdaContext context)
+        public void FunctionHandler(IncidentWrapper wrapper, ILambdaContext context)
         {
             var nextExam = wrapper.Input.Exams.FirstOrDefault();
             var studentId = wrapper.Input.StudentId;
             var token = wrapper.TaskToken;
-
+            var incidentId = wrapper.Input.IncidentId.ToString("D");
+            
             if (nextExam != null)
             {
-                SendEmail(nextExam, studentId, token).Wait();
+                SendEmail(nextExam, studentId, token, incidentId).Wait();
                 context.Logger.Log("Done");
             }
             else
@@ -60,8 +61,9 @@ namespace SendNotificationTask
         /// <param name="nextExam">Exam details</param>
         /// <param name="studentId">Student Id</param>
         /// <param name="token">Step Function Callback Token</param>
+        /// <param name="incidentId"></param>
         /// <returns></returns>
-        private async Task SendEmail(Exam nextExam, string studentId, string token)
+        private async Task SendEmail(Exam nextExam, string studentId, string token, string incidentId)
         {
             try
             {
@@ -75,16 +77,18 @@ namespace SendNotificationTask
                     "\n" +
                     "Please copy and paste this link into your browser to start your exam." +
                     "\n" +
-                    $"http://localhost:3000?tt={token}&exam={nextExam.ExamId}&student={studentId}";
+                    $"http://localhost:3000?TaskToken={token}&ExamId={nextExam.ExamId}&IncidentId={incidentId}";
 
                 var htmlContent =
                     $"<p>Dear Student (ID: {studentId}),</p>" +
                     $"<p>you have until <strong>{nextExam.ExamDate}</strong> to complete your Plagiarism Violation exam.</p> " +
                     "<p>Thank you.</p>" +
-                    $"<p><a href=\"{_testingCentreUrl}?tt={token}&eid={nextExam.ExamId}&sid={studentId}\"><strong>Click here to start your exam</strong></a></p>";
+                    $"<p><a href=\"{_testingCentreUrl}?TaskToken={token}&ExamId={nextExam.ExamId}&IncidentId={incidentId}\"><strong>Click here to start your exam</strong></a></p>";
 
                 var msg = MailHelper.CreateSingleEmail(from, to, subject, plainTextContent, htmlContent);
                 Console.WriteLine(msg.Serialize());
+                
+                AWSXRayRecorder.Instance.BeginSubsegment("Sendgrid", DateTime.Now);
                 var response = await client.SendEmailAsync(msg).ConfigureAwait(false);
                 AWSXRayRecorder.Instance.EndSubsegment();
 
