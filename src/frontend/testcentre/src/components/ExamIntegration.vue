@@ -120,7 +120,7 @@ export default {
       event.preventDefault();
       // Post our response back to Step Functions to continue the flow.
       let apiName = 'PlagiarismStepFunctionsDemo';
-      let path = '/submitExam';
+      let path = '/exam';
       let myInit = {
         body: this.examData
       };
