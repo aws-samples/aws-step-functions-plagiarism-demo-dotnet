@@ -2,7 +2,7 @@
 
 ## Requirements
 
-* [AWS CLI](https://aws.amazon.com/cli/) already configured withalready configured with Administrator permission
+* [AWS CLI](https://aws.amazon.com/cli/) configured with Administrator permission
 * [Docker installed](https://www.docker.com/community-edition)
 * [SAM CLI installed](https://github.com/awslabs/aws-sam-cli)
 * [.NET Core installed](https://www.microsoft.com/net/download)
