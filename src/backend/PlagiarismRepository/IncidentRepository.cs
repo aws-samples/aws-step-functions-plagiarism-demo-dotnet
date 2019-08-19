@@ -19,11 +19,12 @@ namespace PlagiarismRepository
         public IncidentRepository(string tableName)
         {
             if (!string.IsNullOrEmpty(tableName))
-            {     
+            {
                 _tableName = tableName;
-                AWSConfigsDynamoDB.Context.TypeMappings[typeof(Incident)] = new Amazon.Util.TypeMapping(typeof(Incident), tableName);
+                AWSConfigsDynamoDB.Context.TypeMappings[typeof(Incident)] =
+                    new Amazon.Util.TypeMapping(typeof(Incident), tableName);
             }
-            
+
             var config = new DynamoDBContextConfig {Conversion = DynamoDBEntryConversion.V2};
             _dynamoDbContext = new DynamoDBContext(new AmazonDynamoDBClient(), config);
         }
@@ -36,27 +37,28 @@ namespace PlagiarismRepository
         public IncidentRepository(IAmazonDynamoDB ddbClient, string tableName)
         {
             if (!string.IsNullOrEmpty(tableName))
-            {  
+            {
                 _tableName = tableName;
-                AWSConfigsDynamoDB.Context.TypeMappings[typeof(Incident)] = new Amazon.Util.TypeMapping(typeof(Incident), tableName);
+                AWSConfigsDynamoDB.Context.TypeMappings[typeof(Incident)] =
+                    new Amazon.Util.TypeMapping(typeof(Incident), tableName);
             }
-            
+
             var config = new DynamoDBContextConfig {Conversion = DynamoDBEntryConversion.V2};
             _dynamoDbContext = new DynamoDBContext(ddbClient, config);
         }
 
-        public async Task<Incident> GetIncidentById(Guid incidentId)
+        public Incident GetIncidentById(Guid incidentId)
         {
             Console.WriteLine($"Getting blog {incidentId}");
-            var state = await _dynamoDbContext.LoadAsync<Incident>(incidentId);
-            Console.WriteLine($"Found blog: {state != null}");
+            var incident = _dynamoDbContext.LoadAsync<Incident>(incidentId).Result;
+            Console.WriteLine($"Found Incident: {incident != null}");
 
-            if (state == null)
+            if (incident == null)
             {
                 throw new IncidentNotFoundException($"Could not locate {incidentId} in table {_tableName}");
             }
-            
-            return state;
+
+            return incident;
         }
 
         /// <summary>
@@ -64,12 +66,12 @@ namespace PlagiarismRepository
         /// </summary>
         /// <param name="incident"></param>
         /// <returns>Instance of State </returns>
-        public async Task<Incident> SaveIncident(Incident incident)
+        public Incident SaveIncident(Incident incident)
         {
             try
             {
-                Console.WriteLine($"Saving blog with id {incident.IncidentId}");
-                await _dynamoDbContext.SaveAsync(incident);
+                Console.WriteLine($"Saving incident with id {incident.IncidentId}");
+                _dynamoDbContext.SaveAsync(incident).Wait();
                 return incident;
             }
             catch (AmazonDynamoDBException e)
@@ -77,7 +79,6 @@ namespace PlagiarismRepository
                 Console.WriteLine(e);
                 throw;
             }
-
         }
     }
 }

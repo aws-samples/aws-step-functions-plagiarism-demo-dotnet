@@ -19,7 +19,7 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ScheduleExamTask", "Schedul
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "SendNotificationTask", "SendNotificationTask\SendNotificationTask.csproj", "{71577E57-1D2B-4118-87D9-B742D8674EA3}"
 EndProject
-Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "SAM", "SAM", "{296D1A28-AD46-4DD3-866F-2BCAB14A7E4B}"
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Infra", "Infra", "{296D1A28-AD46-4DD3-866F-2BCAB14A7E4B}"
 	ProjectSection(SolutionItems) = preProject
 		template.yaml = template.yaml
 	EndProjectSection

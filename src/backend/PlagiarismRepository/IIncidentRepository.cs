@@ -6,7 +6,7 @@ namespace PlagiarismRepository
 {
     public interface IIncidentRepository
     {
-        Task<Incident> SaveIncident(Incident incident);
-        Task<Incident> GetIncidentById(Guid incidentId);
+        Incident SaveIncident(Incident incident);
+        Incident GetIncidentById(Guid incidentId);
     }
 }

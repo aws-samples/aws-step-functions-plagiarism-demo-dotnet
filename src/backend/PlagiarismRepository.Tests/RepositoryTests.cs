@@ -27,7 +27,7 @@ namespace IncidentPersistence.Tests
         }
 
         [Fact]
-        public async Task SaveIncidentAsync()
+        public void SaveIncidentAsync()
         {
             _incidentRepository = new IncidentRepository(_dynamoDbClient, _tableName);
 
@@ -44,13 +44,13 @@ namespace IncidentPersistence.Tests
                 ResolutionDate = null
             };
 
-            var incident = await _incidentRepository.SaveIncident(state);
+            var incident =  _incidentRepository.SaveIncident(state);
 
             Assert.NotNull(incident);
         }
 
         [Fact]
-        public async Task UpdateIncidentAsync()
+        public void UpdateIncidentAsync()
         {
             _incidentRepository = new IncidentRepository(_dynamoDbClient, _tableName);
 
@@ -61,7 +61,7 @@ namespace IncidentPersistence.Tests
                 IncidentDate = new DateTime(2018, 02, 03),
             };
 
-            var incident = await _incidentRepository.SaveIncident(state);
+            var incident =  _incidentRepository.SaveIncident(state);
 
             incident.Exams = new List<Exam>
             {
@@ -70,7 +70,7 @@ namespace IncidentPersistence.Tests
                 new Exam(Guid.NewGuid(), new DateTime(2018, 02, 17), 99)
             };
 
-            var updatedIncident = await _incidentRepository.SaveIncident(state);
+            var updatedIncident = _incidentRepository.SaveIncident(state);
 
             Assert.NotNull(incident);
             Assert.True(updatedIncident.Exams.Count == 3, "Should be three");
@@ -78,7 +78,7 @@ namespace IncidentPersistence.Tests
 
 
         [Fact]
-        public async Task FindIncidentAsync()
+        public void FindIncidentAsync()
         {
             _incidentRepository = new IncidentRepository(_dynamoDbClient, _tableName);
 
@@ -95,9 +95,9 @@ namespace IncidentPersistence.Tests
                 ResolutionDate = null
             };
 
-            var incident = await _incidentRepository.SaveIncident(state);
+            var incident =  _incidentRepository.SaveIncident(state);
 
-            var newIncident = await _incidentRepository.GetIncidentById(incident.IncidentId);
+            var newIncident =  _incidentRepository.GetIncidentById(incident.IncidentId);
 
             Assert.NotNull(newIncident);
             Assert.True(newIncident.IncidentId == incident.IncidentId, "Should be teh same incident");

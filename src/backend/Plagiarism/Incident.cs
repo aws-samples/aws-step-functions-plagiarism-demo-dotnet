@@ -24,7 +24,7 @@ namespace Plagiarism
     {
         private ExamResult _examResult;
         public Guid ExamId { get; set; }
-        public DateTime ExamDate { get; set; }
+        public DateTime ExamDeadline { get; set; }
         public int Score { get; set; }
 
         public ExamResult Result
@@ -53,10 +53,10 @@ namespace Plagiarism
         {
         }
 
-        public Exam(Guid examId, DateTime examDate, int score)
+        public Exam(Guid examId, DateTime examDeadline, int score)
         {
             ExamId = examId;
-            ExamDate = examDate;
+            ExamDeadline = examDeadline;
             Score = score;
             NotificationSent = false;
         }
@@ -64,7 +64,7 @@ namespace Plagiarism
         public override string ToString()
         {
             return
-                $"ExamId: {ExamId}, ExamDate: {ExamDate}, Score: {Score}, Result: {Result}, NotificationSent: {NotificationSent}";
+                $"ExamId: {ExamId}, ExamDate: {ExamDeadline}, Score: {Score}, Result: {Result}, NotificationSent: {NotificationSent}";
         }
     }
 
