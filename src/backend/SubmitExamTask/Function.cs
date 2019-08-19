@@ -54,7 +54,7 @@ namespace SubmitExamTask
             var body = JsonConvert.DeserializeObject<Dictionary<string, string>>(request?.Body);
 
             var isIncidentId = Guid.TryParse(body["IncidentId"], out var incidentId);
-            var isExamId = Guid.TryParse(body["ExamId"], out var examId);
+            var isExamId = Guid.TryParse(body["ExamId"], out var examId);    
             var isScore = Int32.TryParse(body["Score"], out var score);
             var token = body["TaskToken"];
 
@@ -72,7 +72,7 @@ namespace SubmitExamTask
             Console.WriteLine($"Score: {score}");
             Console.WriteLine($"Token: {token}");
 
-            var incident = _incidentRepository.GetIncidentById(incidentId).Result;
+            var incident = _incidentRepository.GetIncidentById(incidentId);
             var exam = incident.Exams.Find(e => e.ExamId == examId);
             exam.Score = score;
 

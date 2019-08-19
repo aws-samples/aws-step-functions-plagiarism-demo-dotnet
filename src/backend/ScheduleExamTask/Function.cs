@@ -22,7 +22,7 @@ namespace ScheduleExamTask
             AWSSDKHandler.RegisterXRayForAllServices();
             _incidentRepository = new IncidentRepository(Environment.GetEnvironmentVariable("TABLE_NAME"));
         }
-        
+
 
         /// <summary>
         /// Constructor used for testing purposes
@@ -45,19 +45,31 @@ namespace ScheduleExamTask
         /// <returns></returns>
         public Incident FunctionHandler(Incident incident, ILambdaContext context)
         {
-            var exam = new Exam(Guid.NewGuid(), DateTime.Now.AddSeconds(10), 0);
+            Incident incidentData = null;
+            try
+            {
+                incidentData = _incidentRepository.GetIncidentById(incident.IncidentId);
+            }
+            catch (IncidentNotFoundException e)
+            {
+                Console.WriteLine("Incident not found, creating new incident.");
+                incidentData = _incidentRepository.SaveIncident(incident);
+            }
+            
+            Console.WriteLine($"Scheduling exam for incident {incidentData.IncidentId}");
+            var exam = new Exam(Guid.NewGuid(), DateTime.Now.AddDays(7), 0);
 
-            if (incident.Exams != null && incident.Exams.Count >= 3)
+            if (incidentData.Exams != null && incidentData.Exams.Count >= 3)
             {
                 throw new StudentExceededAllowableExamRetries("Student cannot take more that 3 exams.");
             }
 
             // Always add latest exam to the top of the list so we can reference it in the state-machine definition.
-            incident.Exams?.Insert(0, exam);
+            incidentData.Exams?.Insert(0, exam);
 
-            _incidentRepository.SaveIncident(incident);
-
-            return incident;
+            _incidentRepository.SaveIncident(incidentData);
+            Console.WriteLine($"Exam for incident {incidentData.IncidentId} scheduled.");
+            return incidentData;
         }
     }
 }

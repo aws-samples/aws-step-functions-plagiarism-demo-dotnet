@@ -73,7 +73,7 @@ namespace SendNotificationTask
                 var to = new EmailAddress(_toEmail);
 
                 var plainTextContent =
-                    $"Dear Student (ID: {studentId}), you have until {nextExam.ExamDate} to complete your Plagiarism Violation exam. Thank you." +
+                    $"Dear Student (ID: {studentId}), you have until {nextExam.ExamDeadline} to complete your Plagiarism Violation exam. Thank you." +
                     "\n" +
                     "Please copy and paste this link into your browser to start your exam." +
                     "\n" +
@@ -81,7 +81,7 @@ namespace SendNotificationTask
 
                 var htmlContent =
                     $"<p>Dear Student (ID: {studentId}),</p>" +
-                    $"<p>you have until <strong>{nextExam.ExamDate}</strong> to complete your Plagiarism Violation exam.</p> " +
+                    $"<p>you have until <strong>{nextExam.ExamDeadline}</strong> to complete your Plagiarism Violation exam.</p> " +
                     "<p>Thank you.</p>" +
                     $"<p><a href=\"{_testingCentreUrl}?TaskToken={token}&ExamId={nextExam.ExamId}&IncidentId={incidentId}\"><strong>Click here to start your exam</strong></a></p>";
 
