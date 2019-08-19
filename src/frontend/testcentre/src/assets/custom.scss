@@ -78,4 +78,26 @@ $navbar-background-color: $aws_squidink;
   width: 60em;
 }
 
+.loading:after {
+  overflow: hidden;
+  display: inline-block;
+  vertical-align: bottom;
+  -webkit-animation: ellipsis steps(4,end) 1500ms infinite;
+  animation: ellipsis steps(4,end) 1500ms infinite;
+  content: "......";
+  width: 0px;
+}
+
+@keyframes ellipsis {
+  to {
+    width: 60px;
+  }
+}
+
+@-webkit-keyframes ellipsis {
+  to {
+    width: 60px;
+  }
+}
+
 @import "~bulma/bulma";

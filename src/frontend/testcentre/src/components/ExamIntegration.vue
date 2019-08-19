@@ -50,6 +50,9 @@
         </div>
       </div>
 
+      <div v-if='sendingRequest' class="notification is-info loading">
+        Sending request
+      </div>
       <!--
         Hidden notification messages which are shown depending on the outcome
         of a POST to our APIGW endpoint.
@@ -70,7 +73,6 @@
       </div>
   </div>
 </template>
-
 
 <script>
 // Use the event bus to respond when a score is recorded from the exam.
@@ -93,6 +95,8 @@ export default {
       submitSuccessful: false,
       // Set to true if a POST to our API fails.
       submitFailed: false,
+      // Show message while request is POSTing.
+      sendingRequest: false,
       submitErrorMessage: ''
     }
   },
@@ -125,6 +129,9 @@ export default {
   methods: {
     submitToStepFunctions: function(event) {
       event.preventDefault();
+      // Show a progress message if the request takes more than progressDelay.
+      const progressDelay = 500;
+      let showProgress = setTimeout(function(){this.sendingRequest = true;}.bind(this), progressDelay);
       // Post our response back to Step Functions to continue the flow.
       let apiName = 'PlagiarismStepFunctionsDemo';
       let path = '/exam';
@@ -132,12 +139,16 @@ export default {
         body: this.examData
       };
       this.$Amplify.API.post(apiName, path, myInit).then(response => {
+        clearTimeout(showProgress);
+        this.sendingRequest = false;
         this.submitSuccessful = true;
         // Let the exam component know that this exam has been sent back.
         ExamEventBus.$emit('examPostedSuccessfully');
 
       }).catch(error => {
         // Something went wrong.
+        clearTimeout(showProgress);
+        this.sendingRequest = false;
         this.submitFailed = true;
         // Hack to get endpoint string.
         let endpointTried = this.$Amplify.API._options.endpoints[0].endpoint + path;
