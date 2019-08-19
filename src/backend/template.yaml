@@ -23,7 +23,7 @@ Parameters:
   StudentTestingCentreUrl:
     Default: "http://localhost:3000"
     Type: String
-    Description: Endpoint for the TEsting Centre website
+    Description: Endpoint for the Testing Centre website
   
   ######   ##        #######  ########     ###    ##        ######  
   ##    ##  ##       ##     ## ##     ##   ## ##   ##       ##    ## 
@@ -127,6 +127,7 @@ Resources:
     Type: AWS::Serverless::Api
     Properties:
       StageName: v2
+      TracingEnabled: true
       DefinitionBody:
         swagger: "2.0"
         info:
@@ -452,25 +453,11 @@ Resources:
                   Resource:
                     - !Sub ${IncidentsTable.Arn}
 
-    ######  ##    ##  ######  
-    ##    ## ###   ## ##    ## 
-    ##       ####  ## ##       
-    ######  ## ## ##  ######  
-    ## ##  ####       ## 
-  ##    ## ##   ### ##    ## 
-  ######  ##    ##  ######  
-
-#  DevelopingWithStepFunctionsSNSTopic:
-#    Type: AWS::SNS::Topic
-#    Properties:
-#      Subscription:
-#        - Endpoint: !Ref Not
-#          Protocol: email
 
 Outputs:
   StepFunctionsAPIUrl:
     Description: API URL
-    Value: !Sub "https://${StepFunctionsAPI}.execute-api.${AWS::Region}.amazonaws.com/v1/incident"
+    Value: !Sub "https://${StepFunctionsAPI}.execute-api.${AWS::Region}.amazonaws.com/v2"
 
   StepFunctionsStateMachine:
     Description: Step Functions State Machine ARN
@@ -491,10 +478,6 @@ Outputs:
   SubmitExamTaskFunctionArn:
     Description: Submit Exam Function Function ARN
     Value: !GetAtt SubmitExamTaskFunction.Arn
-
-#  ValidateExamResultsFunctionArn:
-#    Description: Validate Exam Results Function ARN
-#    Value: !GetAtt ValidateExamResultsFunction.Arn
 
   ResolveIncidentFunctionArn:
     Description: Resolve Incident Function ARN
