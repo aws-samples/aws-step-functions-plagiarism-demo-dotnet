@@ -43,10 +43,11 @@ namespace SendNotificationTask
             var studentId = wrapper.Input.StudentId;
             var token = wrapper.TaskToken;
             var incidentId = wrapper.Input.IncidentId.ToString("D");
+            var examCount = wrapper.Input.Exams.Count;
             
             if (nextExam != null)
             {
-                SendEmail(nextExam, studentId, token, incidentId).Wait();
+                SendEmail(nextExam, studentId, token, incidentId, examCount).Wait();
                 context.Logger.Log("Done");
             }
             else
@@ -62,8 +63,9 @@ namespace SendNotificationTask
         /// <param name="studentId">Student Id</param>
         /// <param name="token">Step Function Callback Token</param>
         /// <param name="incidentId"></param>
+        /// <param name="examCount"></param>
         /// <returns></returns>
-        private async Task SendEmail(Exam nextExam, string studentId, string token, string incidentId)
+        private async Task SendEmail(Exam nextExam, string studentId, string token, string incidentId, int examCount)
         {
             try
             {
@@ -73,7 +75,15 @@ namespace SendNotificationTask
                 var to = new EmailAddress(_toEmail);
 
                 var plainTextContent =
-                    $"Dear Student (ID: {studentId}), you have until {nextExam.ExamDeadline} to complete your Plagiarism Violation exam. Thank you." +
+                    $"Dear Student (ID: {studentId})," +
+                    $"\n" +
+                    "You have been suspected of plagiarism. You must pass an exam, or you will be referred for administrative action." +
+                    "\n" +
+                    $"You have until {nextExam.ExamDeadline} to complete your Plagiarism Violation exam." +
+                    "\n" +
+                    $"This is your {examCount} of 3 attempts. The passmark is 70%." +
+                    "\n" +
+                    "Thank you." +
                     "\n" +
                     "Please copy and paste this link into your browser to start your exam." +
                     "\n" +
@@ -81,7 +91,9 @@ namespace SendNotificationTask
 
                 var htmlContent =
                     $"<p>Dear Student (ID: {studentId}),</p>" +
-                    $"<p>you have until <strong>{nextExam.ExamDeadline}</strong> to complete your Plagiarism Violation exam.</p> " +
+                    "<p>You have been suspected of plagiarism. You must pass an exam, or you will be referred for administrative action.</p>" +
+                    $"<p>You have until <strong>{nextExam.ExamDeadline}</strong> to complete your Plagiarism Violation exam.</p> " +
+                    $"<p>This is your <strong>{examCount} of 3</strong> attempts. The passmark is 70%.</p>" +
                     "<p>Thank you.</p>" +
                     $"<p><a href=\"{_testingCentreUrl}?TaskToken={token}&ExamId={nextExam.ExamId}&IncidentId={incidentId}\"><strong>Click here to start your exam</strong></a></p>";
 
