@@ -111,7 +111,7 @@ export default {
       // UrlSearchParams uses parsing rules which may alter the token;
       // get the raw value instead.
       let url = new URL(window.location.href);
-      const regex = /TaskToken=(.*)&/gm;
+      const regex = /TaskToken=([^&]+)/gm;
       let taskToken = regex.exec(url.search);
       if (taskToken.length >= 2) {
         this.examData.TaskToken = taskToken[1];
