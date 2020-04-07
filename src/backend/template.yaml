@@ -35,7 +35,7 @@ Parameters:
 
 Globals:
   Function:
-    Runtime: dotnetcore2.1
+    Runtime: dotnetcore3.1
     Timeout: 30
     Tracing: Active
     Environment:
@@ -43,11 +43,11 @@ Globals:
         TABLE_NAME: !Ref IncidentsTable
     Tags:
       Project: DevelopingWithDotNetStepFunctions
-  # Api:
-  #   Cors:
-  #     AllowMethods: "'OPTIONS,POST'"
-  #     AllowHeaders: "'Content-Type'"
-  #     AllowOrigin: "'*'"
+  Api:
+    Cors:
+      AllowMethods: "'OPTIONS,POST,GET'"
+      AllowHeaders: "'Content-Type,X-Amz-Date,Authorization,X-Api-Key,X-Amz-Security-Token'"
+      AllowOrigin: "'*'"
 
 Resources:
 
