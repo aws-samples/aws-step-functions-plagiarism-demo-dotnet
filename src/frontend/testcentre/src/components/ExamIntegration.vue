@@ -104,7 +104,14 @@ export default {
       let params = new URLSearchParams(uri);
       this.examData.IncidentId = params.get('IncidentId') || this.examData.IncidentId;
       this.examData.ExamId = params.get('ExamId') || this.examData.ExamId;
-      this.examData.TaskToken = params.get('TaskToken') || this.examData.TaskToken;
+      // UrlSearchParams uses parsing rules which may alter the token;
+      // get the raw value instead.
+      let url = new URL(window.location.href);
+      const regex = /TaskToken=([^&]+)/gm;
+      let taskToken = regex.exec(url.search);
+      if (taskToken.length >= 2) {
+        this.examData.TaskToken = taskToken[1];
+      }
   },
 
   mounted: function() {
