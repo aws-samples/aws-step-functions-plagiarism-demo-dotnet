@@ -1,15 +1,15 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
-    <TargetFramework>netcoreapp2.1</TargetFramework>
+    <TargetFramework>netcoreapp3.1</TargetFramework>
     <GenerateRuntimeConfigurationFiles>true</GenerateRuntimeConfigurationFiles>
     <AWSProjectType>Lambda</AWSProjectType>
   </PropertyGroup>
   <ItemGroup>
     <PackageReference Include="Amazon.Lambda.Core" Version="1.1.0" />
-    <PackageReference Include="Amazon.Lambda.Serialization.Json" Version="1.6.0" />
-    <PackageReference Include="AWSSDK.DynamoDBv2" Version="3.3.101.55" />
-    <PackageReference Include="AWSXRayRecorder.Core" Version="2.6.0" />
-    <PackageReference Include="AWSXRayRecorder.Handlers.AwsSdk" Version="2.7.0" />
+    <PackageReference Include="Amazon.Lambda.Serialization.SystemTextJson" Version="1.0.0" />
+    <PackageReference Include="AWSSDK.DynamoDBv2" Version="3.3.105.25" />
+    <PackageReference Include="AWSXRayRecorder.Core" Version="2.6.2" />
+    <PackageReference Include="AWSXRayRecorder.Handlers.AwsSdk" Version="2.7.2" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\PlagiarismRepository\PlagiarismRepository.csproj" />

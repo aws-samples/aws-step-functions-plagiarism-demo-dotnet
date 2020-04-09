@@ -4,9 +4,8 @@ using Amazon.XRay.Recorder.Handlers.AwsSdk;
 using Plagiarism;
 using PlagiarismRepository;
 
-// Assembly attribute to enable the Lambda function's JSON state to be converted into a .NET class.
-[assembly: LambdaSerializer(typeof(Amazon.Lambda.Serialization.Json.JsonSerializer))]
-
+// Assembly attribute to enable the Lambda function's JSON input to be converted into a .NET class.
+[assembly: LambdaSerializer(typeof(Amazon.Lambda.Serialization.SystemTextJson.LambdaJsonSerializer))]
 namespace AdminActionTask
 {
     public class Function
