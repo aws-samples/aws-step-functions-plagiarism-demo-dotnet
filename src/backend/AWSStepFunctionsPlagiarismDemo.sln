@@ -25,9 +25,9 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Infra", "Infra", "{296D1A28
 	EndProjectSection
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Shared", "Shared", "{6CF48F2A-02DF-44D2-8765-1822B0F54D2A}"
-	ProjectSection(SolutionItems) = preProject
-		state-machine.json = state-machine.json
-	EndProjectSection
+ProjectSection(SolutionItems) = preProject
+	state-machine.asl.json = state-machine.asl.json
+EndProjectSection
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SendNotificationTask.Tests", "SendNotificationTask.Tests\SendNotificationTask.Tests.csproj", "{7BC85B28-1084-4439-A601-E456631088DC}"
 EndProject
