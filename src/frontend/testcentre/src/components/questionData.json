@@ -4,7 +4,7 @@
       "text": "What is Plagiarism?",
       "answers": {
         "q1a": "Borrowing an original idea and presenting it as a new idea",
-        "q1b": "A way of writting",
+        "q1b": "A way of writing",
         "q1c": "A new type of tropical disease",
         "q1d": "Ethical behavior"
       },
@@ -34,7 +34,7 @@
     {
       "text": "You re-use paragraphs from a paper you wrote last semester and put it into a new assignment, and you don’t cite it because it’s your own work. Is this plagiarism?",
       "answers": {
-        "q4a": "Yes, it is self-plagiarism.",
+        "q4a": "Yes, it is self-plagiarism",
         "q4b": "No, it isn't plagiarism"
       },
       "correct_answer": "q4a",
