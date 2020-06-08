@@ -134,6 +134,7 @@ export default {
       this.$Amplify.API.post(apiName, path, myInit).then(response => {
         this.submitSuccessful = true;
         // Let the exam component know that this exam has been sent back.
+        console.log(response);
         ExamEventBus.$emit('examPostedSuccessfully');
 
       }).catch(error => {
