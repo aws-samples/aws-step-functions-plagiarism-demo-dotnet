@@ -23,7 +23,7 @@ namespace SubmitExamTask.Tests
 
         private const string Token =
             "AAAAKgAAAAIAAAAAAAAAAbdvA5UnsPbXk2HGkayUMygJK8eFJq3pnwBV/xTTDwiIbXvk246zL6Y1+UxXRWzPnbLD0mex2AEUEwMfjxjOj0lW0g+6AwFv6gA0MW/gU2SAdkHZl7tQQ1o3uBL2eOlSSYakcvPvF35BJdXCFkhhKaoqB8CzpnzkJPr7KVSXumjMouy/C4KwJJMqcVpeIW2Xhjyxq6FFT8+GRfNspJUaGE3aId15q/dK94xRTPG/Gidez7iuINk6Y7JpbA4/sj3T2hpUuDKyi4CcCkI8A4z93Hn2Tw2OMqWwhmserDGNfI3UgW3Um6pHRYNvL1prARZ9DkGHHftGaaXXBU8IO1mxYij4TciyP2Cky4b/Dk6ImioM0s+xdIeFOfMprMg73KG5WPK0XAWF+coMC7zBKJTtHZmudk9wKzTPdiSEZrwmPgeD3hVeWTQXwi7GF9hVbpS8wz/QrtI78HGPcbUdMi0Y79YihuGDo6iN4booO/5Tek3prcfDKhU3JtqqqVFRp9ugqQlOxhnkGmKaajp5miRFDcgrghxvP8Fp4D1DDY+/5vUxHFS+tOqvrp24YpSfO51xQxp7GWeg0k9qSnSWntOKdJRjmE7gyvIhKC9XMnlLktJEeBpCQa/B3pqzIr31sPB9ooDTS7m97REIl6Gf0VOtOx4=";
-        private string _tablename;
+        private string _tableName;
 
 
         public FunctionTests(ITestOutputHelper testOutputHelper)
@@ -59,7 +59,7 @@ namespace SubmitExamTask.Tests
             };
 
             var function = new Function(_dynamoDbClient, new AmazonStepFunctionsClient(RegionEndpoint.APSoutheast2),
-                "developing-with-step-functions-IncidentsTable-1KUOBPVDSOWO7");
+                _tableName);
             var response = function.FunctionHandler(request, context);
 
             _testOutputHelper.WriteLine("Lambda Response: \n" + response.StatusCode);
@@ -92,8 +92,8 @@ namespace SubmitExamTask.Tests
                 Headers = new Dictionary<string, string> {{"Content-Type", "application/json"}}
             };
 
-            var function = new Function(_dynamoDbClient, new AmazonStepFunctionsClient(RegionEndpoint.APSoutheast1),
-                _tablename);
+            var function = new Function(_dynamoDbClient, new AmazonStepFunctionsClient(RegionEndpoint.APSoutheast2),
+                _tableName);
             var response = function.FunctionHandler(request, context);
 
             _testOutputHelper.WriteLine("Lambda Response: \n" + response.StatusCode);
@@ -125,8 +125,8 @@ namespace SubmitExamTask.Tests
                 Headers = new Dictionary<string, string> {{"Content-Type", "application/json"}}
             };
 
-            var function = new Function(_dynamoDbClient, new AmazonStepFunctionsClient(RegionEndpoint.APSoutheast1),
-                "IncidentsTestTable-637008741220204940");
+            var function = new Function(_dynamoDbClient, new AmazonStepFunctionsClient(RegionEndpoint.APSoutheast2),
+                _tableName);
             var response = function.FunctionHandler(request, context);
 
             _testOutputHelper.WriteLine("Lambda Response: \n" + response.StatusCode);
@@ -147,11 +147,11 @@ namespace SubmitExamTask.Tests
                 listTablesResponse.TableNames.FindAll(s => s.StartsWith(TablePrefix)).FirstOrDefault();
             if (existingTestTable == null)
             {
-                _tablename = TablePrefix + DateTime.Now.Ticks;
+                _tableName = TablePrefix + DateTime.Now.Ticks;
 
                 CreateTableRequest request = new CreateTableRequest
                 {
-                    TableName = _tablename,
+                    TableName = _tableName,
                     ProvisionedThroughput = new ProvisionedThroughput
                     {
                         ReadCapacityUnits = 2,
@@ -176,7 +176,7 @@ namespace SubmitExamTask.Tests
 
                 await _dynamoDbClient.CreateTableAsync(request);
 
-                var describeRequest = new DescribeTableRequest {TableName = _tablename};
+                var describeRequest = new DescribeTableRequest {TableName = _tableName};
                 DescribeTableResponse response;
 
                 do
@@ -188,7 +188,7 @@ namespace SubmitExamTask.Tests
             else
             {
                 Console.WriteLine($"Using existing test table {existingTestTable}");
-                _tablename = existingTestTable;
+                _tableName = existingTestTable;
             }
         }
 

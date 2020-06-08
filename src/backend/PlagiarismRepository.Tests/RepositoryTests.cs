@@ -3,14 +3,13 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
-using Xunit;
 using Amazon;
 using Amazon.DynamoDBv2;
 using Amazon.DynamoDBv2.Model;
 using Plagiarism;
-using PlagiarismRepository;
+using Xunit;
 
-namespace IncidentPersistence.Tests
+namespace PlagiarismRepository.Tests
 {
     public class RepositoryTests
     {
