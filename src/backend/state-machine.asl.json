@@ -5,13 +5,13 @@
     "RegisterIncident": {
       "Type": "Task",
       "Comment": "Register the plagiarism incident in the system and begin workflow execution.",
-      "Resource": "arn:aws:lambda:us-west-2:538510314095:function:sfn-test-invoker",
+      "Resource": "${RegisterIncidentFunctionArn}",
       "Next": "ScheduleExam"
     },
     "ScheduleExam": {
       "Type": "Task",
       "Comment": "Set the next exam deadline for the student to complete the exam.",
-      "Resource": "arn:aws:lambda:us-west-2:538510314095:function:sfn-test-invoker",
+      "Resource": "${ScheduleExamFunctionArn}",
       "Next": "SendNotification",
       "Catch": [
         {
@@ -28,7 +28,7 @@
       "Comment": "Send email confirming exam details and exam deadline. Wait for callback.",
       "Resource": "arn:aws:states:::lambda:invoke.waitForTaskToken",
       "Parameters":{
-        "FunctionName":"SendNotificationFunction",
+        "FunctionName":"${SendExamNotificationFunctionName}",
         "Payload":{
           "input.$":"$",
           "TaskToken.$":"$$.Task.Token"
@@ -59,7 +59,7 @@
     },
     "TakeAdministrativeAction": {
       "Type": "Task",
-      "Resource": "arn:aws:lambda:us-west-2:538510314095:function:sfn-test-invoker",
+      "Resource": "${TakeAdministrativeActionFunctionArn}",
       "Comment": "Take administrative action if student does not sit exam or fails all three attempts.",
       "End": true
     },
@@ -67,7 +67,7 @@
       "Type": "Task",
       "Comment": "Resolves the incident for the student.",
       "End": true,
-      "Resource": "arn:aws:lambda:us-west-2:538510314095:function:sfn-test-invoker"
+      "Resource": "${ResolveIncidentFunctionArn}"
     }
   }
-}s
+}

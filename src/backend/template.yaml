@@ -59,13 +59,6 @@ Resources:
   ##       ##     ## ##     ## ##     ## ##     ## ##     ## 
   ######## ##     ## ##     ## ########  ########  ##     ##
 
-  TakeAdministrativeActionFunction:
-    Type: AWS::Serverless::Function
-    Properties:
-      Description: DevelopingWithDotNetStepFunctions - Send email to administrative staff to notify staff that the student has failed all tests and action needs to be taken.
-      CodeUri: ./AdminActionTask/
-      Handler: AdminActionTask::AdminActionTask.Function::FunctionHandler
-      Role: !Sub ${DynamoDBCrudRole.Arn}
 
   RegisterIncidentFunction:
     Type: AWS::Serverless::Function
@@ -73,14 +66,6 @@ Resources:
       Description: DevelopingWithDotNetStepFunctions - Registers the  incident in the system.
       CodeUri: ./RegisterIncidentTask/
       Handler: RegisterIncidentTask::RegisterIncidentTask.Function::FunctionHandler
-      Role: !Sub ${DynamoDBCrudRole.Arn}
-
-  ResolveIncidentFunction:
-    Type: AWS::Serverless::Function
-    Properties:
-      Description: DevelopingWithDotNetStepFunctions - Marks the  incident as resolved.
-      CodeUri: ./ResolveIncidentTask
-      Handler: ResolveIncidentTask::ResolveIncidentTask.Function::FunctionHandler
       Role: !Sub ${DynamoDBCrudRole.Arn}
 
   ScheduleExamFunction:
@@ -103,7 +88,23 @@ Resources:
           TO_EMAIL: !Ref ToEmail
           FROM_EMAIL: !Ref FromEmail
           TESTING_CENTRE_URL: !Ref StudentTestingCentreUrl
-          
+        
+  ResolveIncidentFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      Description: DevelopingWithDotNetStepFunctions - Marks the  incident as resolved.
+      CodeUri: ./ResolveIncidentTask
+      Handler: ResolveIncidentTask::ResolveIncidentTask.Function::FunctionHandler
+      Role: !Sub ${DynamoDBCrudRole.Arn}
+
+  TakeAdministrativeActionFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      Description: DevelopingWithDotNetStepFunctions - Send email to administrative staff to notify staff that the student has failed all tests and action needs to be taken.
+      CodeUri: ./AdminActionTask/
+      Handler: AdminActionTask::AdminActionTask.Function::FunctionHandler
+      Role: !Sub ${DynamoDBCrudRole.Arn}
+
   SubmitExamTaskFunction:
     Type: AWS::Serverless::Function
     Properties:
@@ -118,7 +119,6 @@ Resources:
             Path: /exam
             Method: post
             RestApiId: !Ref StepFunctionsAPI
-
 
   ###    ########  #### 
   ## ##   ##     ##  ##  
@@ -270,84 +270,28 @@ Resources:
   ######     ##    ######## ##           ##        #######  ##    ##  ######     ##    ####  #######  ##    ##  
 
   DevelopingWithStepFunctionsStateMachine:
-    Type: "AWS::StepFunctions::StateMachine"
+    Type: "AWS::Serverless::StateMachine" # More info about State Machine Resource: https://docs.aws.amazon.com/serverless-application-model/latest/developerguide/sam-resource-statemachine.html
     Properties:
-      StateMachineName: DevelopingWithStepFunctionsDotNetCore
-      RoleArn: !GetAtt StepFunctionsServiceRole.Arn
-      DefinitionString: !Sub |-
-        {
-          "StartAt": "RegisterIncident",
-          "Comment": "Developing with AWS Step Functions Demo",
-          "States": {
-            "RegisterIncident": {
-              "Type": "Task",
-              "Comment": "Register the plagiarism incident in the system and begin workflow execution.",
-              "Resource": "${RegisterIncidentFunction.Arn}",
-              "Next": "ScheduleExam"
-            },
-            "ScheduleExam": {
-              "Type": "Task",
-              "Comment": "Set the next exam deadline for the student to complete the exam.",
-              "Resource": "${ScheduleExamFunction.Arn}",
-              "Next": "SendNotification",
-              "Catch": [
-                {
-                  "ErrorEquals": [
-                    "StudentExceededAllowableExamRetries"
-                  ],
-                  "ResultPath": "$.Error",
-                  "Next": "TakeAdministrativeAction"
-                }
-              ]
-            },
-            "SendNotification": {
-              "Type": "Task",
-              "Comment": "Send email confirming exam details and exam deadline. Wait for callback.",
-              "Resource": "arn:aws:states:::lambda:invoke.waitForTaskToken",
-              "Parameters":{
-                "FunctionName":"${SendExamNotificationFunction}",
-                "Payload":{
-                  "input.$":"$",
-                  "TaskToken.$":"$$.Task.Token"
-                }
-              },
-              "Next": "HasStudentPassedExam"
-            },
-            "HasStudentPassedExam": {
-              "Type": "Choice",
-              "Comment": "If the student has a score less than 67, they need to reschedule",
-              "Choices": [
-                {
-                  "Variable": "$.Exams[0].Result",
-                  "NumericEquals": 0,
-                  "Next": "ResolveIncident"
-                },
-                {
-                  "Variable": "$.Exams[0].Result",
-                  "NumericEquals": 1,
-                  "Next": "ScheduleExam"
-                },
-                {
-                  "Variable": "$.Exams[0].Result",
-                  "NumericEquals": 2,
-                  "Next": "TakeAdministrativeAction"
-                }
-              ]
-            },
-            "TakeAdministrativeAction": {
-              "Type": "Task",
-              "Resource": "${TakeAdministrativeActionFunction.Arn}",
-              "Comment": "Take administrative action if student does not sit exam or fails all three attempts.",
-              "End": true
-            },
-            "ResolveIncident": {
-              "Type": "Task",
-              "Comment": "Resolves the incident for the student.",
-              "End": true,
-              "Resource": "${ResolveIncidentFunction.Arn}"
-            }
-          }
-        }
+      Name: !Ref AWS::StackName
+      DefinitionUri: state-machine.asl.json
+      DefinitionSubstitutions:
+        RegisterIncidentFunctionArn: !GetAtt RegisterIncidentFunction.Arn
+        ScheduleExamFunctionArn: !GetAtt ScheduleExamFunction.Arn
+        SendExamNotificationFunctionName: !Ref SendExamNotificationFunction
+        TakeAdministrativeActionFunctionArn: !GetAtt TakeAdministrativeActionFunction.Arn
+        ResolveIncidentFunctionArn: !GetAtt ResolveIncidentFunction.Arn
+      Policies:
+        - LambdaInvokePolicy:
+            FunctionName: !Ref RegisterIncidentFunction
+        - LambdaInvokePolicy:
+            FunctionName: !Ref ScheduleExamFunction
+        - LambdaInvokePolicy:
+            FunctionName: !Ref SendExamNotificationFunction
+        - LambdaInvokePolicy:
+            FunctionName: !Ref TakeAdministrativeActionFunction
+        - LambdaInvokePolicy:
+            FunctionName: !Ref ResolveIncidentFunction
+
 
   ########  ##    ## ##    ##    ###    ##     ##  #######  ########  ########  
   ##     ##  ##  ##  ###   ##   ## ##   ###   ### ##     ## ##     ## ##     ## 
@@ -360,6 +304,7 @@ Resources:
   IncidentsTable:
     Type: AWS::Serverless::SimpleTable
     Properties:
+      TableName: !Ref AWS::StackName
       PrimaryKey:
         Name: IncidentId
         Type: String
@@ -402,39 +347,6 @@ Resources:
                     - "states:StartExecution"
                   Resource:
                     - !Ref DevelopingWithStepFunctionsStateMachine
-
-  StepFunctionsServiceRole:
-    Type: "AWS::IAM::Role"
-    Properties:
-      Path: !Join ["", ["/", !Ref "AWS::StackName", "/"]]
-      ManagedPolicyArns:
-        - "arn:aws:iam::aws:policy/AWSStepFunctionsFullAccess"
-      AssumeRolePolicyDocument:
-        Version: "2012-10-17"
-        Statement:
-          -
-            Sid: "AllowStepFunctionsServiceToAssumeRole"
-            Effect: "Allow"
-            Action:
-              - "sts:AssumeRole"
-            Principal:
-              Service:
-                - !Sub "states.${AWS::Region}.amazonaws.com"
-      Policies:
-        -   PolicyName: "CallLambdaFunctions"
-            PolicyDocument:
-              Version: '2012-10-17'
-              Statement:
-                -   Effect: "Allow"
-                    Action:
-                      - "lambda:InvokeFunction"
-                    Resource:
-                      - !Sub ${RegisterIncidentFunction.Arn}
-                      - !Sub ${ScheduleExamFunction.Arn}
-                      - !Sub ${SendExamNotificationFunction.Arn}
-                      - !Sub ${SubmitExamTaskFunction.Arn}
-                      - !Sub ${ResolveIncidentFunction.Arn}
-                      - !Sub ${TakeAdministrativeActionFunction.Arn}
 
   DynamoDBCrudRole:
     Type: "AWS::IAM::Role"
