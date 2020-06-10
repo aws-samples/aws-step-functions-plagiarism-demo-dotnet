@@ -1,124 +1,78 @@
-## Developing with AWS Step Functions using .NET Core
+# Developing with AWS Step Functions using .NET Core
 
 ## Requirements
 
+The Serverless Application Model Command Line Interface (SAM CLI) is an extension of the AWS CLI that adds functionality for building and testing Lambda applications. It uses Docker to run your functions in an Amazon Linux environment that matches Lambda.
+
+To use the SAM CLI, you need the following tools:
+
 * [AWS CLI](https://aws.amazon.com/cli/) configured with Administrator permission
-* [Docker installed](https://www.docker.com/community-edition)
-* [SAM CLI installed](https://github.com/awslabs/aws-sam-cli)
-* [.NET Core installed](https://www.microsoft.com/net/download)
+* SAM CLI - [Install the SAM CLI](https://docs.aws.amazon.com/serverless-application-model/latest/developerguide/serverless-sam-cli-install.html)
+* .NET Core - [Install .NET Core](https://www.microsoft.com/net/download)
+* Docker - [Install Docker community edition](https://hub.docker.com/search/?type=edition&offering=community)
 
 Please see the [currently supported patch of each major version of .NET Core](https://github.com/aws/aws-lambda-dotnet#version-status) to ensure your functions are compatible with the AWS Lambda runtime.
 
-## Recommended Tools for Visual Studio / Visual Studio Code Users
+## Building your application
 
-* [Visual Studio Code](https://code.visualstudio.com/)
-* [Visual Studio 2019](https://visualstudio.microsoft.com/) \+ [AWS Toolkit for Visual Studio](https://aws.amazon.com/visualstudio/)
-* [AWS Extensions for .NET CLI](https://github.com/aws/aws-extensions-for-dotnet-cli) which are AWS extensions to the .NET CLI focused on building .NET Core and ASP.NET Core applications and deploying them to AWS services including Amazon Elastic Container Service, AWS Elastic Beanstalk and AWS Lambda.
-* [Mono](https://www.mono-project.com/) installed if you are using Linux & macOS
-
-> **Note: You do not need to have the [AWS Extensions for .NET CLI](https://github.com/aws/aws-extensions-for-dotnet-cli) installed, but are free to do so if you which to use them. Version 3 of the Amazon.Lambda.Tools does require .NET Core 2.1 for installation, but can be used to deploy older versions of .NET Core.**
-
-### Other resources
-
-* [AWS Lambda for .NET Core](https://github.com/aws/aws-lambda-dotnet)
-* [Creating .NET Core AWS Lambda Projects without Visual Studio](https://aws.amazon.com/blogs/developer/creating-net-core-aws-lambda-projects-without-visual-studio/)
-* [The official AWS X-Ray SDK for .NET](https://github.com/aws/aws-xray-sdk-dotnet)
-
-
-## Setup process
-
-### Folder Structure
-
-AWS Lambda C# runtime requires a flat folder with all dependencies including the application. SAM will use `CodeUri` property to know where to look up for both application and dependencies. `CodeUri` must be set to the path to folder containing your Lambda function source code and `.csproj` file.
-
-```yaml
-...
-    HelloWorldFunction:
-        Type: AWS::Serverless::Function
-        Properties:
-            CodeUri: ./src/HelloWorld
-            ...
-```
-
-### Building your application
+To build and deploy your application for the first time, run the following in your shell:
 
 ```bash
 sam build
+sam deploy --guided
 ```
 
-### Local development
+The first command will build the source of your application. The second command will package and deploy your application to AWS, with a series of prompts:
 
-**Invoking function locally**
+* **Stack Name**: The name of the stack to deploy to CloudFormation. This should be unique to your account and region, and a good starting point would be something matching your project name.
+* **AWS Region**: The AWS region you want to deploy your app to.
+* **Confirm changes before deploy**: If set to yes, any change sets will be shown to you before execution for manual review. If set to no, the AWS SAM CLI will automatically deploy application changes.
+* **Allow SAM CLI IAM role creation**: Many AWS SAM templates, including this example, create AWS IAM roles required for the AWS Lambda function(s) included to access AWS services. By default, these are scoped down to minimum required permissions. To deploy an AWS CloudFormation stack which creates or modified IAM roles, the `CAPABILITY_IAM` value for `capabilities` must be provided. If permission isn't provided through this prompt, to deploy this example you must explicitly pass `--capabilities CAPABILITY_IAM` to the `sam deploy` command.
+* **Save arguments to samconfig.toml**: If set to yes, your choices will be saved to a configuration file inside the project, so that in the future you can just re-run `sam deploy` without parameters to deploy changes to your application.
+
+You can find your API Gateway Endpoint URL in the output values displayed after deployment.
+
+## Use the SAM CLI to build and test locally
+
+Build the Lambda functions in your application with the `sam build` command.
 
 ```bash
-sam local invoke --no-event
+plagiarism-demo$ sam build
 ```
 
-To invoke with an event you can pass in a json file to the command.
+The SAM CLI installs dependencies defined in `functions/FunctionName.csproj`, creates a deployment package, and saves it in the `.aws-sam/build` folder.
+
+## Add a resource to your application
+
+The application template uses AWS Serverless Application Model (AWS SAM) to define application resources. AWS SAM is an extension of AWS CloudFormation with a simpler syntax for configuring common serverless application resources such as functions, triggers, and APIs. For resources not included in [the SAM specification](https://github.com/awslabs/serverless-application-model/blob/master/versions/2016-10-31.md), you can use standard [AWS CloudFormation](https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/aws-template-resource-type-ref.html) resource types.
+
+## Fetch, tail, and filter Lambda function logs
+
+To simplify troubleshooting, SAM CLI has a command called `sam logs`. `sam logs` lets you fetch logs generated by your deployed Lambda function from the command line. In addition to printing the logs on the terminal, this command has several nifty features to help you quickly find the bug.
+
+`NOTE`: This command works for all AWS Lambda functions; not just the ones you deploy using SAM.
 
 ```bash
-sam local invoke -e event.json
+plagiarism-demo$ sam logs -n RegisterIncidentFunction --stack-name plagiarism-demo --tail
 ```
 
+You can find more information and examples about filtering Lambda function logs in the [SAM CLI Documentation](https://docs.aws.amazon.com/serverless-application-model/latest/developerguide/serverless-sam-cli-logging.html).
 
-**Invoking function locally through local API Gateway**
+## Cleanup
+
+To delete the sample application that you created, use the AWS CLI. Assuming you used your project name for the stack name, you can run the following:
 
 ```bash
-sam local start-api
+aws cloudformation delete-stack --stack-name plagiarism-demo
 ```
 
-**SAM Local** is used to emulate both Lambda and API Gateway locally and uses our `template.yaml` to understand how to bootstrap this environment (runtime, where the source code is, etc.) - The following excerpt is what the CLI will read in order to initialize an API and its routes:
+## Resources
 
-```yaml
-...
-Events:
-    HelloWorldFunction:
-        Type: Api # More info about API Event Source: https://github.com/awslabs/serverless-application-model/blob/master/versions/2016-10-31.md#api
-        Properties:
-            Path: /hello
-            Method: get
-```
+See the [AWS SAM developer guide](https://docs.aws.amazon.com/serverless-application-model/latest/developerguide/what-is-sam.html) for an introduction to SAM specification, the SAM CLI, and serverless application concepts.
 
-If the previous command run successfully you should now be able to hit the following local endpoint to invoke your function `http://localhost:3000/hello`
+Next, you can use AWS Serverless Application Repository to deploy ready to use Apps that go beyond hello world samples and learn how authors developed their applications: [AWS Serverless Application Repository main page](https://aws.amazon.com/serverless/serverlessrepo/)
 
-## Packaging and deployment
-
-First and foremost, we need an `S3 bucket` where we can upload our Lambda functions packaged as ZIP before we deploy anything - If you don't have a S3 bucket to store code artifacts then this is a good time to create one:
-
-```bash
-aws s3 mb s3://BUCKET_NAME
-```
-
-Next, run the following command to package our Lambda function to S3:
-
-```bash
-sam package \
-    --output-template-file packaged.yaml \
-    --s3-bucket REPLACE_THIS_WITH_YOUR_S3_BUCKET_NAME
-```
-
-Next, the following command will create a Cloudformation Stack and deploy your SAM resources.
-
-```bash
-sam deploy \
-    --template-file packaged.yaml \
-    --stack-name developing-with-step-functions \
-    --parameter-overrides ToEmail=YOUR_TO_EMAIL FromEmail=YOUR_FROM_EMAIL StudentTestingCentreUrl=URL_TO_TESTING_CENTRE_WEBSITE ApiKey=REPLACE_THIS_WITH_YOUR_API_KEY_FOR_SENDGRID \
-    --capabilities CAPABILITY_IAM
-```
-
-> **See [Serverless Application Model (SAM) HOWTO Guide](https://github.com/awslabs/serverless-application-model/blob/master/HOWTO.md) for more details in how to get started.**
-
-After deployment is complete you can run the following command to retrieve the API Gateway Endpoint URL:
-
-```bash
-aws cloudformation describe-stacks \
-    --stack-name sam-app \
-    --query 'Stacks[].Outputs'
-```
-
-
-# Next Steps
+## Next Steps
 
 Create your own .NET Core solution template to use with SAM CLI. [Cookiecutter for AWS SAM and .NET](https://github.com/aws-samples/cookiecutter-aws-sam-dotnet) provides you with a sample implementation how to use cookiecutter templating library to standardise how you initialise your Serverless projects.
 
@@ -131,15 +85,3 @@ For more information and examples of how to use `sam init` run
 ``` bash
 sam init --help
 ```
-
-## Bringing to the next level
-
-Here are a few ideas that you can use to get more acquainted as to how this overall process works:
-
-* Create an additional API resource (e.g. /hello/{proxy+}) and return the name requested through this new path
-* Update unit test to capture that
-* Package & Deploy
-
-Next, you can use the following resources to know more about beyond hello world samples and how others structure their Serverless applications:
-
-* [AWS Serverless Application Repository](https://aws.amazon.com/serverless/serverlessrepo/)

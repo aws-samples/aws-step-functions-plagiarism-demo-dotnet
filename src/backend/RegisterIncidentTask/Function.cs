@@ -26,6 +26,14 @@ namespace RegisterIncidentTask
         public Incident FunctionHandler(Incident incident, ILambdaContext context)
         {
 
+            if(string.IsNullOrEmpty(incident.StudentId)){
+                throw new ArgumentException("StudentId cannot be empty.");
+            }
+            if(incident.IncidentDate == DateTime.MinValue)
+            {
+                incident.IncidentDate = DateTime.Now;
+            }
+
             incident.IncidentId = Guid.NewGuid();
             incident.Exams = new List<Exam>();
             incident.IncidentResolved = false;
