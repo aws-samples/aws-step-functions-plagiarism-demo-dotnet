@@ -7,8 +7,8 @@
   <ItemGroup>
     <PackageReference Include="Amazon.Lambda.Core" Version="1.1.0" />
     <PackageReference Include="Amazon.Lambda.Serialization.SystemTextJson" Version="2.0.1" />
-    <PackageReference Include="AWSXRayRecorder.Core" Version="2.8.0" />
-    <PackageReference Include="AWSXRayRecorder.Handlers.AwsSdk" Version="2.8.0" />
+    <PackageReference Include="AWSXRayRecorder.Core" Version="2.9.0" />
+    <PackageReference Include="AWSXRayRecorder.Handlers.AwsSdk" Version="2.8.1" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\Plagiarism\Plagiarism.csproj" />
