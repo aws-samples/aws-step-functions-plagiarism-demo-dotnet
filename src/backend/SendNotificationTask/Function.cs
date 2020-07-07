@@ -87,7 +87,7 @@ namespace SendNotificationTask
                     "\n" +
                     "Please copy and paste this link into your browser to start your exam." +
                     "\n" +
-                    $"http://localhost:3000?TaskToken={token}&ExamId={nextExam.ExamId}&IncidentId={incidentId}";
+                    $"{_testingCentreUrl}?TaskToken={token}&ExamId={nextExam.ExamId}&IncidentId={incidentId}";
 
                 var htmlContent =
                     $"<p>Dear Student (ID: {studentId}),</p>" +
@@ -95,11 +95,12 @@ namespace SendNotificationTask
                     $"<p>You have until <strong>{nextExam.ExamDeadline}</strong> to complete your Plagiarism Violation exam.</p> " +
                     $"<p>This is your <strong>{examCount} of 3</strong> attempts. The passmark is 70%.</p>" +
                     "<p>Thank you.</p>" +
-                    $"<p><a href=\"{_testingCentreUrl}?TaskToken={token}&ExamId={nextExam.ExamId}&IncidentId={incidentId}\"><strong>Click here to start your exam</strong></a></p>";
+                    $"<p><a href=\"{_testingCentreUrl}?TaskToken={token}&ExamId={nextExam.ExamId}&IncidentId={incidentId}\"><strong>Click here to start your exam</strong></a></p>" +
+                    $"<p>If the URL does not work, copy and paste this into the address bar of your browser <br/> {_testingCentreUrl}?TaskToken={token}&ExamId={nextExam.ExamId}&IncidentId={incidentId}</p>";
 
                 var msg = MailHelper.CreateSingleEmail(from, to, subject, plainTextContent, htmlContent);
                 Console.WriteLine(msg.Serialize());
-                
+
                 AWSXRayRecorder.Instance.BeginSubsegment("Sendgrid", DateTime.Now);
                 var response = await client.SendEmailAsync(msg).ConfigureAwait(false);
                 AWSXRayRecorder.Instance.EndSubsegment();
