@@ -34,6 +34,11 @@ Parameters:
   ######   ########  #######  ########  ##     ## ########  ######  
 
 Globals:
+  Api:
+    Cors:
+      AllowMethods: "'OPTIONS,POST,GET'"
+      AllowHeaders: "'Content-Type,X-Amz-Date,Authorization,X-Api-Key,X-Amz-Security-Token'"
+      AllowOrigin: "'*'"
   Function:
     Runtime: dotnetcore3.1
     Timeout: 30

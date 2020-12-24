@@ -10,7 +10,7 @@
 
     <ItemGroup>
       <PackageReference Include="Amazon.Lambda.Serialization.SystemTextJson" Version="2.0.1" />
-      <PackageReference Include="AWSSDK.DynamoDBv2" Version="3.3.105.25" />
+      <PackageReference Include="AWSSDK.DynamoDBv2" Version="3.3.106.28" />
     </ItemGroup>
 
 </Project>

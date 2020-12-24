@@ -4,7 +4,7 @@
     "endpoints": [
       {
         "name": "PlagiarismStepFunctionsDemo",
-        "endpoint": "https://1234567890-abcdefgh.amazonaws.com"
+        "endpoint": "https://123456789.execute-api.us-east-1.amazonaws.com/v2"
       }
     ]
   }

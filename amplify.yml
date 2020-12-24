@@ -9,10 +9,11 @@ frontend:
     build:
       commands:
         - cd src/frontend/testcentre
+        - echo $APIGW_ENDPOINT
         - ./replace-endpoint.sh $APIGW_ENDPOINT
-        - yarn global add @vue/cli
-        - yarn install
-        - yarn build
+        - npm install -g @vue/cli
+        - npm install
+        - npm run build
   artifacts:
     baseDirectory: src/frontend/testcentre/dist
     files:
