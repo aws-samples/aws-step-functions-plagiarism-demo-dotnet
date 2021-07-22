@@ -5,12 +5,11 @@
     </PropertyGroup>
 
     <ItemGroup>
-      <ProjectReference Include="..\Plagiarism\Plagiarism.csproj" />
+      <PackageReference Include="AWSSDK.DynamoDBv2" Version="3.7.0.45" />
     </ItemGroup>
 
     <ItemGroup>
-      <PackageReference Include="Amazon.Lambda.Serialization.SystemTextJson" Version="2.0.1" />
-      <PackageReference Include="AWSSDK.DynamoDBv2" Version="3.3.106.28" />
+      <ProjectReference Include="..\Plagiarism\Plagiarism.csproj" />
     </ItemGroup>
 
 </Project>
