@@ -5,10 +5,10 @@
     <AWSProjectType>Lambda</AWSProjectType>
   </PropertyGroup>
   <ItemGroup>
-    <PackageReference Include="Amazon.Lambda.Core" Version="1.1.0" />
-    <PackageReference Include="Amazon.Lambda.Serialization.SystemTextJson" Version="2.0.1" />
-    <PackageReference Include="AWSXRayRecorder.Core" Version="2.9.0" />
-    <PackageReference Include="AWSXRayRecorder.Handlers.AwsSdk" Version="2.8.1" />
+    <PackageReference Include="Amazon.Lambda.Core" Version="2.0.0" />
+    <PackageReference Include="Amazon.Lambda.Serialization.SystemTextJson" Version="2.1.0" />
+    <PackageReference Include="AWSXRayRecorder.Core" Version="2.10.1" />
+    <PackageReference Include="AWSXRayRecorder.Handlers.AwsSdk" Version="2.8.3" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\PlagiarismRepository\PlagiarismRepository.csproj" />

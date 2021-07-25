@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Threading.Tasks;
 using Amazon;
 using Amazon.DynamoDBv2;
 using Amazon.DynamoDBv2.DataModel;
