@@ -40,19 +40,16 @@ Globals:
       AllowHeaders: "'Content-Type,X-Amz-Date,Authorization,X-Api-Key,X-Amz-Security-Token'"
       AllowOrigin: "'*'"
   Function:
-    Runtime: dotnetcore3.1
+    Runtime: dotnet6
     Timeout: 30
+    Architectures:
+      - x86_64
     Tracing: Active
     Environment:
       Variables:
         TABLE_NAME: !Ref IncidentsTable
     Tags:
       Project: DevelopingWithDotNetStepFunctions
-  Api:
-    Cors:
-      AllowMethods: "'OPTIONS,POST,GET'"
-      AllowHeaders: "'Content-Type,X-Amz-Date,Authorization,X-Api-Key,X-Amz-Security-Token'"
-      AllowOrigin: "'*'"
 
 Resources:
 
