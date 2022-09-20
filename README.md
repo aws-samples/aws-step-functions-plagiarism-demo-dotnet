@@ -1,4 +1,4 @@
-## AWS Step Functions Plagiarism Demo .NET Core
+## AWS Step Functions Plagiarism Demo .NET
 
 Welcome! This a simple workflow to demonstrate how you can combine [AWS Step Functions](https://aws.amazon.com/step-functions/) with [AWS Lambda](https://aws.amazon.com/lambda/), [Amazon DynamoDB](https://aws.amazon.com/dynamodb/), [AWS XRay](https://aws.amazon.com/xray/), using [Microsoft .NET Core](https://dotnet.microsoft.com/).
 
