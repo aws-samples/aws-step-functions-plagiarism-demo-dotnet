@@ -17,9 +17,9 @@ $dark: $aws_squidink;
 
 // Images.
 // @todo investigate file-loader to avoid keeping images in /public.
-$asset_path: "/images";
-$aws_logo_img: "#{$asset_path}/aws_smile-header-desktop-en-white_59x35.png";
-$aws_hero_bg_img: "#{$asset_path}/Site-Merch_Core_Pattern_04_Hero-BG.dadf16672c8636dfa866de47b915e2e3fd2fd970.png";
+$asset_path: "/public/images";
+$aws_logo_img: "#{$asset_path}/aws-smile.png";
+$aws_hero_bg_img: "#{$asset_path}/bg.png";
 
 // Main title
 $title_color: $aws_squidink;
