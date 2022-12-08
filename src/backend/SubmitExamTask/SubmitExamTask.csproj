@@ -11,7 +11,7 @@
         <PackageReference Include="AWSSDK.StepFunctions" Version="3.7.0.207" />
         <PackageReference Include="AWSXRayRecorder.Core" Version="2.11.1" />
         <PackageReference Include="AWSXRayRecorder.Handlers.AwsSdk" Version="2.9.1" />
-        <PackageReference Include="Newtonsoft.Json" Version="13.0.1" />
+        <PackageReference Include="Newtonsoft.Json" Version="13.0.2" />
     </ItemGroup>
     <ItemGroup>
       <ProjectReference Include="..\PlagiarismRepository\PlagiarismRepository.csproj" />
