@@ -1,0 +1,81 @@
+@charset "utf-8";
+
+// Colours.
+// Taken from AWS Brand Book (July 2018).
+// Primary brand colour
+$aws_orange: #FF9900;
+// Primary neutral brand colour.
+$aws_squidink: #232F3E;
+//$heading-color: rgb(35, 47, 62); // this is the same as squidink
+//$aws_bg_grey: #f7f7f7;
+// Secondary Data.
+$aws_mercury: #545b64;
+$white: #FFF;
+
+// Customizing Bulma variables.
+$dark: $aws_squidink;
+
+// Images.
+// @todo investigate file-loader to avoid keeping images in /public.
+$asset_path: "/public/images";
+$aws_logo_img: "#{$asset_path}/aws-smile.png";
+$aws_hero_bg_img: "#{$asset_path}/bg.png";
+
+// Main title
+$title_color: $aws_squidink;
+
+// Navbar
+$navbar-background-color: $aws_squidink;
+
+#exam-hero {
+  background-image:
+    url($aws_logo_img),
+    url($aws_hero_bg_img);
+  background-position:
+    right 1em top 1em,
+    right;
+  background-repeat:
+    no-repeat,
+    no-repeat;
+  margin-bottom: -1.5em;
+}
+
+.exam {
+  margin-bottom: 1em;
+  .question,
+  .submit {
+    margin-top: 1em;
+    .control {
+      margin-top: 1em;
+    }
+  }
+}
+
+
+#exam-progress {
+  width: 100%;
+  .progress-bar {
+    margin-right: 2em;
+    vertical-align: middle;
+    width: 84%;
+  }
+  .progress-text {
+    margin-left: auto;
+  }
+}
+
+#score-display {
+  margin-left: auto;
+}
+
+#task-token-preview  {
+  overflow: hidden;
+  width: 40em;
+  transition: 1s;
+}
+
+#task-token-preview:hover {
+  width: 60em;
+}
+
+@import "~bulma/bulma";
