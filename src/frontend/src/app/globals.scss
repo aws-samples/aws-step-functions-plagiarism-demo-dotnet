@@ -71,13 +71,9 @@ $navbar-background-color: $aws_squidink;
   overflow: hidden;
   width: 40em;
   transition: 1s;
+  display: inline-block;
 }
-
-#task-token-preview:hover {
-  width: 60em;
-}
-
-@import "~bulma/bulma";
 
 
 @import '../../node_modules/bulma/bulma.sass';
+@import "../../node_modules/bootstrap/scss/bootstrap.scss";

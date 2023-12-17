@@ -1,5 +1,3 @@
-import { useState } from "react";
-
 type QuestionProps = {
     recordAnswer: (questionId: string, answer: string) => void;
     questionText: string;
@@ -11,7 +9,6 @@ type QuestionProps = {
 
 export default function Question({ recordAnswer, questionText, answers, questionId, questionNumber, disabled }: QuestionProps) {
 
-    console.log(Object.entries(answers))
     return (<div>
         <div className="field box question">
             <label className="label">
@@ -28,7 +25,7 @@ export default function Question({ recordAnswer, questionText, answers, question
                         <option disabled selected value="">Please select one</option>
                         {Object.entries(answers).map(([optionId, optionText],) => (
                             <option
-                                value={optionText}
+                                value={optionId}
                                 key={optionId}
                             >
                                 {optionText}

@@ -75,7 +75,5 @@ $navbar-background-color: $aws_squidink;
 }
 
 #task-token-preview:hover {
-  width: 60em;
+  text-wrap: pretty;
 }
-
-@import "~bulma/bulma";
