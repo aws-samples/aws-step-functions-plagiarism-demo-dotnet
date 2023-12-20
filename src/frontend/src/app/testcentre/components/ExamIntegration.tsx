@@ -1,7 +1,7 @@
 'use client'
 
 import { useEffect, useState } from 'react'
-import { submitExam } from '@/api/api'
+import { ExamData, submitExam } from '@/api/api'
 import { useSearchParams } from 'next/navigation';
 
 type ExamIntegrationProps = {
@@ -9,8 +9,8 @@ type ExamIntegrationProps = {
     score: number
 }
 
-export default function ExamIntegration({score, setExamSubmitted}: ExamIntegrationProps) {
-    const [examData, setExamData] = useState({
+export default function ExamIntegration({ score, setExamSubmitted }: ExamIntegrationProps) {
+    const [examData, setExamData] = useState<ExamData>({
         // Exam score (out of 100).
         Score: score,
         // Unique identifier for plagiarism incident.
@@ -21,8 +21,7 @@ export default function ExamIntegration({score, setExamSubmitted}: ExamIntegrati
         TaskToken: 'Not supplied'
     });
     const [isSubmitSuccessful, setIsSubmitSuccessful] = useState(false);
-    const [isSubmitFailed, setIsSubmitFailed] = useState(false);
-    const [submitErrorMessage, setSubmitErrorMessage] = useState('');
+    const [submitMessage, setSubmitMessage] = useState('');
 
     const params = useSearchParams();
 
@@ -30,15 +29,16 @@ export default function ExamIntegration({score, setExamSubmitted}: ExamIntegrati
         // If present, get the primary keys, then set our hidden form value.
         // Keys can get passed as a GET variables,
         // in the form ?/TaskToken=baz&IncidentId=foo&ExamId=bar
-        const incidentId = params.get('IncidentId') || examData.IncidentId;
-        const examId = params.get('ExamId') || examData.ExamId;
-        const taskToken = params.get('TaskToken') || examData.TaskToken;
-        setExamData({ ...examData, IncidentId: incidentId, ExamId: examId, TaskToken: taskToken });
-    }, []);
+        const incidentId = params.get('IncidentId') || 'Not supplied';
+        const examId = params.get('ExamId') || 'Not supplied';
+        const taskToken = params.get('TaskToken') || 'Not supplied';
+        setExamData((examData)=> ({ ...examData, IncidentId: incidentId, ExamId: examId, TaskToken: taskToken }));
+    }, [params]);
 
 
     function submitToStepFunctions(event: any) {
         event.preventDefault();
+        console.log(examData);
         // Post our response back to Step Functions to continue the flow.
         submitExam(examData).then(response => {
             setIsSubmitSuccessful(true);
@@ -47,13 +47,9 @@ export default function ExamIntegration({score, setExamSubmitted}: ExamIntegrati
             setExamSubmitted(true);
         }).catch(error => {
             // Something went wrong.
-            setIsSubmitFailed(true);
-            setSubmitErrorMessage(error);
+            setSubmitMessage(error);
+            console.log(error);
         });
-    }
-
-    function deleteNotification() {
-        setIsSubmitFailed(false);
     }
 
     return (
@@ -78,7 +74,7 @@ export default function ExamIntegration({score, setExamSubmitted}: ExamIntegrati
                             <div className="tags has-addons">
                                 <span className="tag">Task Token</span>
                                 {/* <!--- TODO: improve this UX --> */}
-                                <span id="task-token-preview" className="tag is-danger">{examData.TaskToken}</span> 
+                                <span id="task-token-preview" className="tag is-danger">{examData.TaskToken}</span>
                             </div>
                         </div>
                         <hr />
@@ -103,34 +99,29 @@ export default function ExamIntegration({score, setExamSubmitted}: ExamIntegrati
                                 Test GET variables</a>
                         </div>
 
-                        <div className="control level-item">
-                            <a onClick={(e) => submitToStepFunctions(e)} className="btn btn-dark" href="#">Submit to Step Function Execution</a>
+                        <div className="control level-item" onClick={(e) => submitToStepFunctions(e)}>
+                            <a className="btn btn-dark" href="#">Submit to Step Function Execution</a>
                         </div>
                     </div>
                 </div>
 
-                {isSubmitSuccessful &&
-                    (
-
+                {submitMessage.length > 0 && (
+                    isSubmitSuccessful ? (
                         <div className="notification success exam-submitted is-primary">
-                            <button onClick={(e) => deleteNotification()} className="delete"></button>
+                            <button onClick={(e) => setSubmitMessage('')} className="delete"></button>
                             Your exam has been submitted. Your score was <strong>{examData.Score}%</strong> Your assessor will be in touch to let you
                             know what the next steps are.
                         </div>
 
-                    )}
-
-                {isSubmitFailed && (
-                    <div className="notification failure submission-failed is-error">
-                        <button onClick={(e) => deleteNotification()} className="delete"></button>
-                        <p>There was an error when submitting your exam:</p>
-                        <br />
-                        <pre>{submitErrorMessage}</pre>
-                    </div>
-                )
-
+                    ) : (
+                        <div className="notification failure submission-failed is-error">
+                            <button onClick={(e) => setSubmitMessage('')} className="delete"></button>
+                            <p>There was an error when submitting your exam:</p>
+                            <br />
+                            <pre>{submitMessage}</pre>
+                        </div>
+                    ))
                 }
-
             </div>
         </div>
 

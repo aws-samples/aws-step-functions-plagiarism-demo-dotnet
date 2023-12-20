@@ -1,7 +1,7 @@
 type QuestionProps = {
     recordAnswer: (questionId: string, answer: string) => void;
     questionText: string;
-    answers: Map<string, string>;
+    answers: Object;
     questionId: string;
     questionNumber: number;
     disabled: boolean;
@@ -21,8 +21,9 @@ export default function Question({ recordAnswer, questionText, answers, question
                         required
                         disabled={disabled}
                         onChange={(e) => { recordAnswer(questionId, e.target.value) }}
+                        defaultValue={''}
                     >
-                        <option disabled selected value="">Please select one</option>
+                        <option disabled value="">Please select one</option>
                         {Object.entries(answers).map(([optionId, optionText],) => (
                             <option
                                 value={optionId}

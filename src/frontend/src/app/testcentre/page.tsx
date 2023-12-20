@@ -11,7 +11,7 @@ export default function ExamPage() {
   return (
     <main>
       <section id="exam-hero" className="hero is-dark">
-        <div className="hero-body">
+        <div className="hero-body container">
           <h1 className="title">AWS Step Functions Plagiarism Exam</h1>
           <p className="subtitle">
             Please re-attempt the exam. Once you are done, submit your exam for marking.

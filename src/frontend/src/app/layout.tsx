@@ -1,8 +1,5 @@
 import type { Metadata } from 'next'
-import { Inter } from 'next/font/google'
 import './globals.scss'
-
-const inter = Inter({ subsets: ['latin'] })
 
 export const metadata: Metadata = {
   title: 'AWS Step Functions Plagiarism Demo - Test Centre',
@@ -16,7 +13,8 @@ export default function RootLayout({
 }) {
   return (
     <html lang="en">
-      <body className={inter.className}>{children}</body>
+       <link rel="icon" href="/images/favicon.ico"/>
+      <body>{children}</body>
     </html>
   )
 }

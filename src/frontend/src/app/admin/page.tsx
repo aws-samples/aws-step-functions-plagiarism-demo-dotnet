@@ -8,8 +8,8 @@ import { Incident, createIncident } from '@/api/api';
 export default function AdminPage({ }) {
     const [incidentData, setIncidentData] = useState<Incident>({ StudentId: '', IncidentDate: undefined });
     const [showMessage, setShowMessage] = useState(false);
-    const [executionArn, setExecutionArn] = useState('');
-    const [executionStartDate, setExecutionStartDate] = useState();
+    const [executionArn, setExecutionArn] = useState<string | undefined>(undefined);
+    const [executionStartDate, setExecutionStartDate] = useState<string | undefined>(undefined);
 
 
     function resetForm() {
@@ -18,21 +18,10 @@ export default function AdminPage({ }) {
     }
 
     async function incidentFormSubmitted() {
-        const response = await createIncident(incidentData);
-        const responseJson = await response.json();
-
-        fetch('https://[ADD YOUR API GATEWAY URL HERE]/incident', { method: 'POST', body: JSON.stringify(incidentData) })
-            .then(response => response.json())
-            .then(response => {
-                // get status
-                setExecutionArn(response?.body?.executionArn)
-                setExecutionStartDate(response?.body?.startDate);
-                setShowMessage(true);
-
-            }, error => {
-                console.log(error)
-
-            });
+        const {executionArn: incidentExecutionArn, startDate: incidentStartDate} = await createIncident(incidentData);
+        setExecutionArn(incidentExecutionArn);
+        setExecutionStartDate(incidentStartDate);
+        setShowMessage(true);
     }
 
 

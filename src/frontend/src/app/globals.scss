@@ -16,7 +16,7 @@ $dark: $aws_squidink;
 
 // Images.
 // @todo investigate file-loader to avoid keeping images in /public.
-$asset_path: "/public/images";
+$asset_path: "/images";
 $aws_logo_img: "#{$asset_path}/aws-smile.png";
 $aws_hero_bg_img: "#{$asset_path}/bg.png";
 
@@ -65,6 +65,13 @@ $navbar-background-color: $aws_squidink;
 
 #score-display {
   margin-left: auto;
+}
+
+#task-token-preview  {
+  overflow: hidden;
+  width: 40em;
+  transition: 1s;
+  display: inline-block;
 }
 
 #task-token-preview  {
