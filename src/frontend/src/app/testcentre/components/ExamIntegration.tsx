@@ -38,7 +38,6 @@ export default function ExamIntegration({ score, setExamSubmitted }: ExamIntegra
 
     function submitToStepFunctions(event: any) {
         event.preventDefault();
-        console.log(examData);
         // Post our response back to Step Functions to continue the flow.
         submitExam(examData).then(response => {
             setIsSubmitSuccessful(true);

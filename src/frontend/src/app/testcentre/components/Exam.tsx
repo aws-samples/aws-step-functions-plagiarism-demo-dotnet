@@ -21,7 +21,6 @@ export default function Exam({ examSubmitted, setScore, score }: ExamProps) {
     const [questionsAnswered, setQuestionsAnswered] = useState(0);
     const totalQuestions: number = QuestionData.questions.length
     const [answers, setAnswers] = useState<Map<string, string>>(new Map<string, string>());
-    const [isExamDisabled, setIsExamDisabled] = useState<boolean>(examSubmitted);
 
     /**
      * when a form is submitted. Calculates score and puts it back into the workflow.
@@ -52,12 +51,13 @@ export default function Exam({ examSubmitted, setScore, score }: ExamProps) {
      * Reacts to a Question select event.
      */
     function recordAnswer(questionId: string, answerIdGiven: string) {
+        console.log(questionId, answerIdGiven);
         // Update the progress bar if this question has not already been answered.
         if (!answers.get(questionId)) {
             setQuestionsAnswered(questionsAnswered + 1);
         }
         // Record a student answer for later comparison.
-        answers.set(questionId, answerIdGiven);
+        setAnswers(answers => answers.set(questionId, answerIdGiven));
     }
 
 
@@ -88,7 +88,7 @@ export default function Exam({ examSubmitted, setScore, score }: ExamProps) {
                                 questionText={question.text}
                                 answers={question.answers}
                                 questionId={question.question_id}
-                                disabled={isExamDisabled}
+                                disabled={examSubmitted}
                             />
                         ))
                         }
@@ -96,7 +96,7 @@ export default function Exam({ examSubmitted, setScore, score }: ExamProps) {
 
                     <div className="field submit is-flex">
                         <div className="control">
-                            <input disabled={isExamDisabled} className="btn btn-primary" type="submit" value="Score Exam" />
+                            <input disabled={examSubmitted} className="btn btn-primary" type="submit" value="Score Exam" />
                         </div>
                         <div id="score-display" className="control">
                             <div className="tags are-medium has-addons">

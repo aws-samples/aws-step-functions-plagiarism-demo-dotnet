@@ -1,24 +1,32 @@
 'use client'
 
-import { useState } from 'react'
+import { FormEvent, useRef, useState } from 'react'
 import { Incident, createIncident } from '@/api/api';
 
 
 
 export default function AdminPage({ }) {
-    const [incidentData, setIncidentData] = useState<Incident>({ StudentId: '', IncidentDate: undefined });
     const [showMessage, setShowMessage] = useState(false);
     const [executionArn, setExecutionArn] = useState<string | undefined>(undefined);
     const [executionStartDate, setExecutionStartDate] = useState<string | undefined>(undefined);
+    const [submittedStudentId, setSubmittedStudentId] = useState<string | undefined>(undefined);
+
+    const studentIdInputRef = useRef<HTMLInputElement>(null); 
+    const incidentDateInputRef = useRef<HTMLInputElement>(null); 
 
 
-    function resetForm() {
-        setIncidentData({ ...incidentData, StudentId: '', IncidentDate: undefined });
+    function resetForm(e: FormEvent) {
+        e.preventDefault();
+        if(studentIdInputRef?.current) studentIdInputRef.current.value = '';
+        if(incidentDateInputRef?.current) incidentDateInputRef.current.value = '';
         setShowMessage(false);
     }
 
-    async function incidentFormSubmitted() {
-        const {executionArn: incidentExecutionArn, startDate: incidentStartDate} = await createIncident(incidentData);
+    async function incidentFormSubmitted(e: FormEvent) {
+        e.preventDefault();
+        if(!studentIdInputRef?.current || !incidentDateInputRef?.current) return;
+        const {executionArn: incidentExecutionArn, startDate: incidentStartDate} = await createIncident({StudentId: studentIdInputRef.current.value, IncidentDate: incidentDateInputRef.current.value});
+        setSubmittedStudentId(studentIdInputRef.current.value);
         setExecutionArn(incidentExecutionArn);
         setExecutionStartDate(incidentStartDate);
         setShowMessage(true);
@@ -41,19 +49,19 @@ export default function AdminPage({ }) {
                 <div className="col">
                     <div className="row">
                         <div className="col">
-                            <form id="incidentForm" onSubmit={(e) => incidentFormSubmitted()}>
+                            <form id="incidentForm" onSubmit={(e) => incidentFormSubmitted(e)}>
                                 <h3 className="text-primary">Create new plagiarism incident</h3>
                                 <div className="form-group">
                                     <label htmlFor="StudentId">Student ID</label>
-                                    <input type="text" className="form-control col-8" id="StudentId" v-model="incidentData.StudentId" />
+                                    <input type="text" className="form-control col-8" id="StudentId" ref={studentIdInputRef}/>
                                 </div>
                                 <div className="form-group">
                                     <label htmlFor="IncidentDate">Incident Date</label>
-                                    <input type="date" className="form-control col-8" id="IncidentDate" v-model="incidentData.IncidentDate" />
+                                    <input type="date" className="form-control col-8" id="IncidentDate" ref={incidentDateInputRef} />
                                 </div>
                                 <div className="form-group">
                                     <button type="submit" className="btn btn-primary">Create incident</button>
-                                    <button type="button" className="btn btn-secondary ml-2" onClick={resetForm}>New incident</button>
+                                    <button type="button" className="btn btn-secondary ml-2" onClick={(e) => resetForm(e)}>Reset</button>
                                 </div>
                             </form>
                         </div>
@@ -62,7 +70,7 @@ export default function AdminPage({ }) {
                         {showMessage && (
                             <>
                                 <div className="alert alert-success" role="alert" v-show="showMessage">
-                                    Created new incident for Student ID: {incidentData?.StudentId}<br />
+                                    Created new incident for Student ID: {submittedStudentId}<br />
                                 </div>
                                 <div className="alert alert-info small" role="alert" v-show="showMessage">
                                     <strong>Execution ARN:</strong> <a href={'https://ap-southeast-2.console.aws.amazon.com/states/home?region=ap-southeast-2#/executions/details/' + executionArn}>{executionArn}</a><br />

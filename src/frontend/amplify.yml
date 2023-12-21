@@ -1,0 +1,20 @@
+# This Amplify Console build configuration will deploy the Test Centre website.
+# You will need to set an environment variable in Amplify, defining the API
+# Gateway endpoint for your Step Functions callback interface.
+# The environment variable should be called APIGW_ENDPOINT
+# See src/frontend/testcentre/README.md for more details.
+version: 0.1
+frontend:
+  phases:
+    build:
+      commands:
+        - cd src/frontend
+        - pnpm install
+        - pnpm run build
+        - pnpm run deploy
+  artifacts:
+    baseDirectory: src/frontend/out
+    files:
+      - '**/*'
+  cache:
+    paths: []

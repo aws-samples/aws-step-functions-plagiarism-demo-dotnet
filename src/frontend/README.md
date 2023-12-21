@@ -24,7 +24,7 @@ The flow for use of the Test Centre is:
 **Payload**
 ```
 {
-  "ExamId": "food",
+  "ExamId": "foo",
   "IncidentId": "bar",
   "TaskToken": "baz",
   "Score": "69"
@@ -43,44 +43,28 @@ The flow for use of the Test Centre is:
 
 4. Then, create a new Amplify Console project.
 
-5. Connect it to a repository hosting this code, then set an enviromnet variable called `APIGW_ENDPOINT` with the value that you just got from the CloudFormation output.
+5. Connect it to a repository hosting this code, then set an enviromnet variable called `NEXT_PUBLIC_API_ENDPOINT` in the .env file with the value that you just got from the CloudFormation output.
 
 6. Deploy the site.
 
 ## Project setup
-
-This project was built with the `vue-cli`, and inherits `yarn` as a package
-manager.
-
-You will likely need the `vue-cli` package installed globally.
-
-Then you can run the following.
-
 ### Install dependencies
 
 ```
-yarn install
+pnpm install
 ```
 
 ### Compile and hot-reloads for development
 ```
-yarn run serve
+pnpm dev
 ```
 
 ### Compile and minify for production
 ```
-yarn run build
+pnpm build
 ```
-
-### Run tests
-```
-yarn run test
-```
-
 ### Lint and fix files
 ```
-yarn run lint
+pnpm run lint
 ```
 
-### Customize configuration
-See [Configuration Reference](https://cli.vuejs.org/config/).

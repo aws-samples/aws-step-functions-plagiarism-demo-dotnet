@@ -1,21 +1,4 @@
-const API_ENDPOINT = process.env.API_ENDPOINT;
-
-export interface Incident {
-    StudentId: string,
-    IncidentDate?: Date
-}
-
-export interface StepFunctionInfo {
-    executionArn: string
-    startDate: string
-}
-
-export async function createIncident(incidentData: Incident): Promise<StepFunctionInfo> {
-    return { "executionArn": "asdf", "startDate": "tomorrow" };
-    const response = await fetch(`${API_ENDPOINT}incident`, { method: 'POST', body: JSON.stringify(incidentData) });
-    const { executionArn, startDate } = await response.json();
-    return { executionArn, startDate };
-}
+const API_ENDPOINT = process.env.NEXT_PUBLIC_API_ENDPOINT;
 
 export interface ExamData {
     // Exam score (out of 100).
@@ -29,9 +12,27 @@ export interface ExamData {
 }
 
 export async function submitExam(examData: ExamData) {
-    return;
-    const response = await fetch(`${API_ENDPOINT}exam`, { method: 'POST', body: JSON.stringify(examData) });
-    if (!response.ok) throw(response);
-    return response;
+    console.log(process.env);
+    console.log(API_ENDPOINT);
+    const response = await fetch(`${API_ENDPOINT}/exam`, { method: 'POST', mode: 'cors', body: JSON.stringify(examData) });
+    if (!response.ok) throw (response);
+    return await response.json();
+}
+
+export interface Incident {
+    StudentId: string,
+    IncidentDate: string
+}
+
+export interface StepFunctionInfo {
+    executionArn: string
+    startDate: string
+}
+
+export async function createIncident(incidentData: Incident): Promise<StepFunctionInfo> {
+    //return { "executionArn": "asdf", "startDate": "tomorrow" };
+    const response = await fetch(`${API_ENDPOINT}/incident`, { method: 'POST', mode: 'cors', headers: { "Content-Type": "application/json" }, body: JSON.stringify(incidentData) });
+    const { executionArn, startDate } = await response.json();
+    return { executionArn, startDate };
 }
 
