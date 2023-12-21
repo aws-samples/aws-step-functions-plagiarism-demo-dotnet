@@ -8,6 +8,7 @@ using Amazon.StepFunctions;
 using Amazon.StepFunctions.Model;
 using Amazon.XRay.Recorder.Handlers.AwsSdk;
 using Newtonsoft.Json;
+using System.Text.Json;
 using PlagiarismRepository;
 
 // Assembly attribute to enable the Lambda function's JSON input to be converted into a .NET class.
@@ -60,10 +61,16 @@ namespace SubmitExamTask
 
             if (!isIncidentId || !isExamId | !isScore | !(token.Length >= 1 & token.Length <= 1024))
             {
+                Console.WriteLine($"Invalid request: {request?.Body}\n\nIncidentId {incidentId} ExamId {examId} Score {score} Token {token}");
                 return new APIGatewayProxyResponse
                 {
                     StatusCode = (int) HttpStatusCode.BadRequest,
-                    Headers = new Dictionary<string, string> {{"Content-Type", "application/json"}}
+                    Headers = new Dictionary<string, string> {
+                        {"Content-Type", "application/json"}, 
+                        {"Access-Control-Allow-Origin", "*"},
+                        {"Access-Control-Allow-Headers", "Content-Type"},
+                        {"Access-Control-Allow-Methods", "OPTIONS,POST"}
+                    }
                 };
             }
 
