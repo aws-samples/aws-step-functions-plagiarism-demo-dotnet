@@ -11,7 +11,7 @@ using PlagiarismRepository;
 using Xunit.Abstractions;
 
 
-namespace ResolveIncidentTask.Tests;
+namespace ScheduleExamTask.Tests;
 
 public class FunctionTests
 {
@@ -26,9 +26,8 @@ public class FunctionTests
         Environment.SetEnvironmentVariable("POWERTOOLS_METRICS_NAMESPACE", "Plagiarism");
     }
 
-
     [Fact]
-    public void ResolveIncidentFunctionTest()
+    public void Returns_Exam()
     {
         var mockIncidentRepository
             = Substitute.For<IIncidentRepository>();
@@ -41,18 +40,40 @@ public class FunctionTests
         state.IncidentId = Guid.NewGuid();
         state.StudentId = "123";
         state.IncidentDate = new DateTime(2018, 02, 03);
-        state.Exams = new List<Exam>()
-        {
-            new Exam(Guid.NewGuid(), new DateTime(2018, 02, 10), 10),
-            new Exam(Guid.NewGuid(), new DateTime(2018, 02, 17), 65)
-        };
-        state.ResolutionDate = null;
-
+        
+        
         // Call function with mock repository
-        function.FunctionHandler(state, context);
-
-        // assert the call to incident repository had state with Resolution date not set to null
-        mockIncidentRepository.Received().SaveIncident(Arg.Is<Incident>(i => i.ResolutionDate != null));
-        mockIncidentRepository.Received().SaveIncident(Arg.Is<Incident>(i => i.IncidentResolved == true));
+        var response = function.FunctionHandler(state, context);
+        
+        Assert.NotNull(response.Exams);
+        Assert.Single(response.Exams);
     }
+    
+    [Fact]
+    public void Returns_two_exams()
+    {
+        var mockIncidentRepository
+            = Substitute.For<IIncidentRepository>();
+
+
+        var function = new Function(mockIncidentRepository);
+        var context = new TestLambdaContext();
+
+        var state = new Incident();
+        state.IncidentId = Guid.NewGuid();
+        state.StudentId = "123";
+        state.IncidentDate = new DateTime(2018, 02, 03);
+        state.Exams = new List<Exam>
+        {
+            new Exam() { ExamId = Guid.NewGuid(), ExamDeadline = DateTime.Now, Score = 50, NotificationSent = true }
+        };
+        
+        
+        // Call function with mock repository
+        var response = function.FunctionHandler(state, context);
+        
+        Assert.NotNull(response.Exams);
+        Assert.Equal(2, response.Exams.Count);
+    }
+    
 }

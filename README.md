@@ -12,7 +12,7 @@ To illustrate the use of [AWS Step Functions](https://aws.amazon.com/step-functi
 
 Visually, the process looks like this:
 
-![Developing With Step Functions](media/step.png "Developing With Step Functions")
+![Developing With Step Functions](media/step_22_07_24.png "Developing With Step Functions")
 
 The process starts by:
 
@@ -26,7 +26,7 @@ The process starts by:
 
 ### The Architecture
 
-![Developing With Step Functions Architecture](media/arch-new.png "Developing With Step Functions Architecture")
+![Developing With Step Functions Architecture](media/arch_22_07_24.png "Developing With Step Functions Architecture")
 
 The architecture is relatively simple. There are two front end websites - one "Admin" website that capture the plagiarism incident; and a "Testing Centre" that tests the students knowledge of plagiarism.
 
@@ -34,25 +34,24 @@ The incident captured at via the Admin website initiates the AWS Step Function e
 
 ![Integration Request](media/api-step.png "Integration Request")
 
-Once the the exam is scheduled, we use an AWS Lambda service integration Task with a `.waitForTaskToken` (see [AWS docs](https://docs.aws.amazon.com/step-functions/latest/dg/connect-to-resource.html#connect-wait-token)). The Task Token is passed to the function which in turn generates the email  which is sent to the student, notifying them of the exam requirements.
+Once the the exam is scheduled, we use an Amazon SNS Integration Task with a `.waitForTaskToken` (see [AWS docs](https://docs.aws.amazon.com/step-functions/latest/dg/connect-to-resource.html#connect-wait-token)). The Task Token is passed to the function (using built in reference of `$$.Task.Token`) which in turn generates the email notifying the student of the exam requirements.
+
+The result of the exam passeHere is a sample from the state machine:
 
 ``` yaml
-"SendNotification": {
-    "Type": "Task",
-    "Comment": "Send email confirming exam details and exam deadline. Wait for callback.",
-    "Resource": "arn:aws:states:::lambda:invoke.waitForTaskToken",
-    "Parameters":{
-    "FunctionName":"${SendExamNotificationFunction}",
-    "Payload":{
-        "input.$":"$",
-        "TaskToken.$":"$$.Task.Token"
-    }
-    },
-    "Next": "HasStudentPassedExam"
-},
+  Notify student:
+    Type: Task
+    Resource: 'arn:aws:states:::sns:publish.waitForTaskToken'
+    Parameters:
+        TopicArn: '${NotificationTopic}'
+        Message.$: "States.Format('\"IncidentId\": \"{}\", \"ExamId\": \"{}\", \"Score\": 0 , \"TaskToken\": 
+                    \"{}\"', $.Payload.IncidentId, $.Payload.Exams[0].ExamId, $$.Task.Token)"
+    Next: HasStudentPassedExam
 ```
 
 Once the student receives the email, the Task Token is passed to the Testing Centre. The student answers the questions and submits the results to the `/exam` resource on the API. The Lambda integration processes the TaskToken and passes the results of the waiting execution to continue the workflow execution.
+
+Tip: Use the payload in the email that is sent to you to simulate the response. Make sure you modify the score before sending it to the Plagiarism API.
 
 ## Resources
 
