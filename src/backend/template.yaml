@@ -32,14 +32,6 @@ Parameters:
     Type: String
     Description: Student email (testing only)
 
-  FromEmail:
-    Type: String
-    Description: Administrator email (testing only)
-  
-  ApiKey:
-    Type: String
-    Description: Sendgrid API key - used in this example, but can be substituted with self managed or other SaaS (testing only)
-
   StudentTestingCentreUrl:
     Default: "http://localhost:3000"
     Type: String
@@ -64,7 +56,7 @@ Globals:
 
   Function:
     Runtime: dotnet8
-    Timeout: 30
+    Timeout: 15
     MemorySize: 512
     Architectures:
       - x86_64
@@ -81,24 +73,11 @@ Globals:
         POWERTOOLS_METRICS_NAMESPACE: "Plagiarism"
         POWERTOOLS_LOG_LEVEL: INFO # Log level for Logger (INFO, DEBUG, etc.), default
         LOG_LEVEL: INFO # Log level for Logger
-    Tags:
-      project: DevelopingWithDotNetStepFunctions
-      stage: !Ref Stage
-      author: Amazon Web Services
 
 Resources:
   
   #### Lambda functions
-  RegisterIncidentFunction:
-    Type: AWS::Serverless::Function
-    Properties:
-      Description: DevelopingWithDotNetStepFunctions - Registers the  incident in the system.
-      CodeUri: ./RegisterIncidentTask/
-      Handler: RegisterIncidentTask::RegisterIncidentTask.Function::FunctionHandler
-      Role: !Sub ${IncidentsTableAccessRole.Arn}
-      LoggingConfig:
-        LogGroup: !Ref PlagiarismFunctionLogGroup
-        
+
   ScheduleExamFunction:
     Type: AWS::Serverless::Function
     Properties:
@@ -106,21 +85,6 @@ Resources:
       CodeUri: ./ScheduleExamTask
       Handler: ScheduleExamTask::ScheduleExamTask.Function::FunctionHandler
       Role: !Sub ${IncidentsTableAccessRole.Arn}
-      LoggingConfig:
-        LogGroup: !Ref PlagiarismFunctionLogGroup
-
-  SendExamNotificationFunction:
-    Type: AWS::Serverless::Function
-    Properties:
-      Description: DevelopingWithDotNetStepFunctions - Send email to the student about their  Exam and when it needs to be completed by.
-      CodeUri: ./SendNotificationTask/
-      Handler: SendNotificationTask::SendNotificationTask.Function::FunctionHandler
-      Environment:
-        Variables:
-          SENDGRID_API_KEY: !Ref ApiKey
-          TO_EMAIL: !Ref ToEmail
-          FROM_EMAIL: !Ref FromEmail
-          TESTING_CENTRE_URL: !Ref StudentTestingCentreUrl
       LoggingConfig:
         LogGroup: !Ref PlagiarismFunctionLogGroup
   
@@ -160,7 +124,6 @@ Resources:
             Path: /exam
             Method: post
             RestApiId: !Ref PlagiarismApi
-  
   
   # API GW Cloudwatch Log Group
   PlagiarismFunctionLogGroup:
@@ -245,19 +208,13 @@ Resources:
       Tracing:
         Enabled: true
       DefinitionSubstitutions:
-        RegisterIncidentFunctionArn: !GetAtt RegisterIncidentFunction.Arn
         ScheduleExamFunctionArn: !GetAtt ScheduleExamFunction.Arn
-        SendExamNotificationFunctionName: !Ref SendExamNotificationFunction
         TakeAdministrativeActionFunctionArn: !GetAtt TakeAdministrativeActionFunction.Arn
         ResolveIncidentFunctionArn: !GetAtt ResolveIncidentFunction.Arn
         NotificationTopic: !Ref PlagiarismTopic
       Policies:
         - LambdaInvokePolicy:
-            FunctionName: !Ref RegisterIncidentFunction
-        - LambdaInvokePolicy:
             FunctionName: !Ref ScheduleExamFunction
-        - LambdaInvokePolicy:
-            FunctionName: !Ref SendExamNotificationFunction
         - LambdaInvokePolicy:
             FunctionName: !Ref TakeAdministrativeActionFunction
         - LambdaInvokePolicy:
@@ -400,17 +357,9 @@ Outputs:
     Description: Step Functions State Machine ARN
     Value: !Ref PlagiarismStateMachine
 
-  RegisterIncidentFunctionArn:
-    Description: Register Incident Function ARN
-    Value: !GetAtt RegisterIncidentFunction.Arn
-
   ScheduleExamFunctionArn:
     Description: Schedule Exam Function ARN
     Value: !GetAtt ScheduleExamFunction.Arn
-
-  SendExamNotificationFunctionArn:
-    Description: Send Exam Notification Function ARN
-    Value: !GetAtt SendExamNotificationFunction.Arn
   
   SubmitExamTaskFunctionArn:
     Description: Submit Exam Function Function ARN
