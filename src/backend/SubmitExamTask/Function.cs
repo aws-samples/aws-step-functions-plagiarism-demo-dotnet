@@ -68,7 +68,7 @@ public class Function
 
             if (!isIncidentId || !isExamId | !isScore | !(token.Length >= 1 & token.Length <= 1024))
             {
-                Console.WriteLine($"Invalid request: {request?.Body}\n\nIncidentId {incidentId} ExamId {examId} Score {score} Token {token}");
+                Logger.LogInformation($"Invalid request: {request?.Body}\n\nIncidentId {incidentId} ExamId {examId} Score {score} Token {token}");
                 return new APIGatewayProxyResponse
                 {
                     StatusCode = (int) HttpStatusCode.BadRequest,
