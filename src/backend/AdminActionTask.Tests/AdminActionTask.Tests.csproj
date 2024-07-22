@@ -1,0 +1,26 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+    <PropertyGroup>
+        <TargetFramework>net8.0</TargetFramework>
+        <ImplicitUsings>enable</ImplicitUsings>
+        <Nullable>enable</Nullable>
+    </PropertyGroup>
+    <ItemGroup>
+        <PackageReference Include="Amazon.Lambda.Core" Version="2.2.0"/>
+        <PackageReference Include="Amazon.Lambda.Serialization.SystemTextJson" Version="2.4.3"/>
+        <PackageReference Include="Amazon.Lambda.TestUtilities" Version="2.0.0"/>
+        <PackageReference Include="Amazon.Lambda.APIGatewayEvents" Version="2.7.0"/>
+        <PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.10.0"/>
+        <PackageReference Include="NSubstitute" Version="5.1.0"/>
+        <PackageReference Include="xunit" Version="2.8.1"/>
+        <PackageReference Include="xunit.runner.visualstudio" Version="2.8.1">
+            <PrivateAssets>all</PrivateAssets>
+            <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+        </PackageReference>
+    </ItemGroup>
+    <ItemGroup>
+        <ProjectReference Include="..\AdminActionTask\AdminActionTask.csproj"/>
+        <ProjectReference Include="..\PlagiarismRepository\PlagiarismRepository.csproj"/>
+        <ProjectReference Include="..\Plagiarism\Plagiarism.csproj"/>
+    </ItemGroup>
+</Project>
