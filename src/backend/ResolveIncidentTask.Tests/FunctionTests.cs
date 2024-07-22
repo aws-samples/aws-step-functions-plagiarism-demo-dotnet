@@ -1,114 +1,58 @@
-﻿using System;
+﻿// Copyright Amazon.com, Inc. or its affiliates. All Rights Reserved.
+// SPDX-License-Identifier: MIT-0
+
+using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Threading;
-using System.Threading.Tasks;
-using Amazon;
-using Amazon.DynamoDBv2;
-using Amazon.DynamoDBv2.Model;
 using Xunit;
 using Amazon.Lambda.TestUtilities;
 using NSubstitute;
 using Plagiarism;
 using PlagiarismRepository;
+using Xunit.Abstractions;
 
-namespace ResolveIncidentTask.Tests
+
+namespace ResolveIncidentTask.Tests;
+
+public class FunctionTests
 {
-    public class FunctionTests
+    private readonly ITestOutputHelper _testOutputHelper;
+
+    public FunctionTests(ITestOutputHelper testOutputHelper)
     {
-        private readonly IAmazonDynamoDB _dynamoDbClient;
-        private const string TablePrefix = "IncidentsTestTable-";
-        private string _tableName;
-        
-        public FunctionTests()
+        _testOutputHelper = testOutputHelper;
+
+        // Set env variable for Powertools Metrics 
+        Environment.SetEnvironmentVariable("TABLE_NAME", "IncidentsTable");
+        Environment.SetEnvironmentVariable("POWERTOOLS_METRICS_NAMESPACE", "Plagiarism");
+    }
+
+
+    [Fact]
+    public void ResolveIncidentFunctionTest()
+    {
+        var mockIncidentRepository
+            = Substitute.For<IIncidentRepository>();
+
+
+        var function = new Function(mockIncidentRepository);
+        var context = new TestLambdaContext();
+
+        var state = new Incident();
+        state.IncidentId = Guid.NewGuid();
+        state.StudentId = "123";
+        state.IncidentDate = new DateTime(2018, 02, 03);
+        state.Exams = new List<Exam>()
         {
-            _dynamoDbClient = new AmazonDynamoDBClient(RegionEndpoint.APSoutheast2);
-        }
+            new Exam(Guid.NewGuid(), new DateTime(2018, 02, 10), 10),
+            new Exam(Guid.NewGuid(), new DateTime(2018, 02, 17), 65)
+        };
+        state.ResolutionDate = null;
 
-        [Fact]
-        public void ResolveIncidentFunctionTest()
-        {
-            var incidentRepository
-                = Substitute.For<IIncidentRepository>();
+        // Call function with mock repository
+        function.FunctionHandler(state, context);
 
-
-            var function = new Function(_dynamoDbClient, _tableName);
-            var context = new TestLambdaContext();
-
-            var state = new Incident
-            {
-                IncidentId = Guid.NewGuid(),
-                StudentId = "123",
-                IncidentDate = new DateTime(2018, 02, 03),
-                Exams = new List<Exam>()
-                {
-                    new Exam(Guid.NewGuid(), new DateTime(2018, 02, 10), 10),
-                    new Exam(Guid.NewGuid(), new DateTime(2018, 02, 17), 65)
-                },
-                ResolutionDate = null
-            };
-
-
-            incidentRepository.SaveIncident(state);
-            incidentRepository.ReceivedCalls();
-
-            function.FunctionHandler(state, context);
-        }
-        
-        /// <summary>
-        /// Helper function to create a testing table
-        /// </summary>
-        /// <returns></returns>
-        private async Task SetupTableAsync()
-        {
-            var listTablesResponse = await _dynamoDbClient.ListTablesAsync(new ListTablesRequest());
-            var existingTestTable =
-                listTablesResponse.TableNames.FindAll(s => s.StartsWith(TablePrefix)).FirstOrDefault();
-            if (existingTestTable == null)
-            {
-                _tableName = TablePrefix + DateTime.Now.Ticks;
-
-                CreateTableRequest request = new CreateTableRequest
-                {
-                    TableName = _tableName,
-                    ProvisionedThroughput = new ProvisionedThroughput
-                    {
-                        ReadCapacityUnits = 2,
-                        WriteCapacityUnits = 2
-                    },
-                    KeySchema = new List<KeySchemaElement>
-                    {
-                        new KeySchemaElement
-                        {
-                            AttributeName = "IncidentId"
-                        }
-                    },
-                    AttributeDefinitions = new List<AttributeDefinition>
-                    {
-                        new AttributeDefinition
-                        {
-                            AttributeName = "IncidentId",
-                            AttributeType = ScalarAttributeType.S
-                        }
-                    }
-                };
-
-                await _dynamoDbClient.CreateTableAsync(request);
-
-                var describeRequest = new DescribeTableRequest {TableName = _tableName};
-                DescribeTableResponse response;
-
-                do
-                {
-                    Thread.Sleep(1000);
-                    response = await _dynamoDbClient.DescribeTableAsync(describeRequest);
-                } while (response.Table.TableStatus != TableStatus.ACTIVE);
-            }
-            else
-            {
-                Console.WriteLine($"Using existing test table {existingTestTable}");
-                _tableName = existingTestTable;
-            }
-        }
+        // assert the call to incident repository had state with Resolution date not set to null
+        mockIncidentRepository.Received().SaveIncident(Arg.Is<Incident>(i => i.ResolutionDate != null));
+        mockIncidentRepository.Received().SaveIncident(Arg.Is<Incident>(i => i.IncidentResolved == true));
     }
 }
