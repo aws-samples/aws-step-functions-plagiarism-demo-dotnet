@@ -1,0 +1,110 @@
+StartAt: Create Incident
+Comment: >-
+  Plagiarism state machine manages the process for student's plagiarism
+  violation.
+States:
+  Create Incident:
+    Type: Pass
+    Next: Save Incident
+    Parameters:
+      StudentId.$: $.StudentId
+      IncidentDate.$: $.IncidentDate
+      IncidentId.$: States.UUID()
+      IncidentResolved: false
+      AdminActionRequired: false
+  Save Incident:
+    Type: Task
+    Resource: arn:aws:states:::dynamodb:putItem
+    Parameters:
+      TableName: plagiarism
+      Item:
+        StudentId:
+          S.$: $.StudentId
+        IncidentDate:
+          S.$: $.IncidentDate
+        IncidentId:
+          S.$: $.IncidentId
+        IncidentResolved:
+          BOOL.$: $.IncidentResolved
+        AdminActionRequired:
+          BOOL.$: $.AdminActionRequired
+    Next: ScheduleExam
+    ResultPath: null
+  ScheduleExam:
+    Type: Task
+    Comment: Set the next exam deadline for the student to complete the exam.
+    Resource: arn:aws:states:::lambda:invoke
+    Parameters:
+      Payload.$: $
+      FunctionName: ${ScheduleExamFunctionArn}
+    Retry:
+      - ErrorEquals:
+          - Lambda.ServiceException
+          - Lambda.AWSLambdaException
+          - Lambda.SdkClientException
+          - Lambda.TooManyRequestsException
+        IntervalSeconds: 1
+        MaxAttempts: 3
+        BackoffRate: 2
+    Next: Notify student
+    Catch:
+      - ErrorEquals:
+          - StudentExceededAllowableExamRetries
+        ResultPath: $.Error
+        Next: TakeAdministrativeAction
+  Notify student:
+    Type: Task
+    Resource: 'arn:aws:states:::sns:publish.waitForTaskToken'
+    Parameters:
+        TopicArn: '${NotificationTopic}'
+        Message.$: "States.Format('\"IncidentId\": \"{}\", \"ExamId\": \"{}\", \"Score\": 0 , \"TaskToken\": \"{}\"', $.Payload.IncidentId, $.Payload.Exams[0].ExamId, $$.Task.Token)"
+    Next: HasStudentPassedExam
+  HasStudentPassedExam:
+    Type: Choice
+    Comment: If the student has a score less than 67, they need to reschedule
+    Choices:
+      - Variable: $.Exams[0].Result
+        NumericEquals: 0
+        Next: ResolveIncident
+      - Variable: $.Exams[0].Result
+        NumericEquals: 1
+        Next: ScheduleExam
+      - Variable: $.Exams[0].Result
+        NumericEquals: 2
+        Next: TakeAdministrativeAction
+  TakeAdministrativeAction:
+    Type: Task
+    Comment: >-
+      Take administrative action if student does not sit exam or fails all three
+      attempts.
+    Resource: arn:aws:states:::lambda:invoke
+    Parameters:
+      Payload.$: $
+      FunctionName: ${TakeAdministrativeActionFunctionArn}
+    Retry:
+      - ErrorEquals:
+          - Lambda.ServiceException
+          - Lambda.AWSLambdaException
+          - Lambda.SdkClientException
+          - Lambda.TooManyRequestsException
+        IntervalSeconds: 1
+        MaxAttempts: 3
+        BackoffRate: 2
+    End: true
+  ResolveIncident:
+    Type: Task
+    Comment: Resolves the incident for the student.
+    Resource: arn:aws:states:::lambda:invoke
+    Parameters:
+      Payload.$: $
+      FunctionName: ${ResolveIncidentFunctionArn}
+    Retry:
+      - ErrorEquals:
+          - Lambda.ServiceException
+          - Lambda.AWSLambdaException
+          - Lambda.SdkClientException
+          - Lambda.TooManyRequestsException
+        IntervalSeconds: 1
+        MaxAttempts: 3
+        BackoffRate: 2
+    End: true
