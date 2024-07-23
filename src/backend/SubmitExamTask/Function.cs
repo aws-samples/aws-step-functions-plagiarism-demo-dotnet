@@ -12,6 +12,7 @@ using AWS.Lambda.Powertools.Logging;
 using AWS.Lambda.Powertools.Metrics;
 using AWS.Lambda.Powertools.Tracing;
 using Newtonsoft.Json;
+using System.Text.Json;
 using PlagiarismRepository;
 
 // Assembly attribute to enable the Lambda function's JSON input to be converted into a .NET class.
@@ -65,14 +66,20 @@ public class Function
 
         var token = body["TaskToken"];
 
-        if (!isIncidentId || !isExamId | !isScore | !(token.Length >= 1 & token.Length <= 1024))
-        {
-            return new APIGatewayProxyResponse
+            if (!isIncidentId || !isExamId | !isScore | !(token.Length >= 1 & token.Length <= 1024))
             {
-                StatusCode = (int)HttpStatusCode.BadRequest,
-                Headers = new Dictionary<string, string> { { "Content-Type", "application/json" } }
-            };
-        }
+                Logger.LogInformation($"Invalid request: {request?.Body}\n\nIncidentId {incidentId} ExamId {examId} Score {score} Token {token}");
+                return new APIGatewayProxyResponse
+                {
+                    StatusCode = (int) HttpStatusCode.BadRequest,
+                    Headers = new Dictionary<string, string> {
+                        {"Content-Type", "application/json"}, 
+                        {"Access-Control-Allow-Origin", "*"},
+                        {"Access-Control-Allow-Headers", "Content-Type"},
+                        {"Access-Control-Allow-Methods", "OPTIONS,POST"}
+                    }
+                };
+            }
 
         Logger.LogInformation("IncidentId: {incidentId}, ExamId: {examId}, Score: {score}, Token: {token}",
             incidentId, examId, score, token);

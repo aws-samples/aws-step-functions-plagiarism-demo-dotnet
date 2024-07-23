@@ -8,13 +8,12 @@ frontend:
   phases:
     build:
       commands:
-        - cd src/frontend/testcentre
-        - echo $APIGW_ENDPOINT
-        - ./replace-endpoint.sh $APIGW_ENDPOINT
-        - npm install
-        - npm run build
+        - cd src/frontend
+        - pnpm install
+        - pnpm run build
+        - pnpm run deploy
   artifacts:
-    baseDirectory: src/frontend/testcentre/dist
+    baseDirectory: src/frontend/out
     files:
       - '**/*'
   cache:
