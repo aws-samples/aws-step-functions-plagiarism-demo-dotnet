@@ -212,6 +212,7 @@ Resources:
         TakeAdministrativeActionFunctionArn: !GetAtt TakeAdministrativeActionFunction.Arn
         ResolveIncidentFunctionArn: !GetAtt ResolveIncidentFunction.Arn
         NotificationTopic: !Ref PlagiarismTopic
+        IncidentsTable: !Ref IncidentsTable
       Policies:
         - LambdaInvokePolicy:
             FunctionName: !Ref ScheduleExamFunction
