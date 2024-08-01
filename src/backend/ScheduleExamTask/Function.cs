@@ -59,18 +59,7 @@ public class Function
     [Metrics(CaptureColdStart = true)]
     public Incident FunctionHandler(Incident incident, ILambdaContext context)
     {
-        // Incident incidentData = null;
-        // try
-        // {
-        //     incidentData = _incidentRepository.GetIncidentById(incident.IncidentId);
-        //     Logger.LogInformation("Found incident {id}", incidentData.IncidentId);
-        // }
-        // catch (IncidentNotFoundException)
-        // {
-        //     Logger.LogInformation("Incident not found, creating new incident.");
-        //     incidentData = _incidentRepository.SaveIncident(incident);
-        // }
-
+        
         Logger.LogInformation("Scheduling exam for incident {incidentData.IncidentId}", incident.IncidentId);
         
         if (incident.Exams != null && incident.Exams.Count >= 3)
