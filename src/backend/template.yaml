@@ -351,7 +351,7 @@ Resources:
 Outputs:
   StepFunctionsAPIUrl:
     Description: API URL
-    Value: !Sub "https://${PlagiarismApi}.execute-api.${AWS::Region}.amazonaws.com/v2"
+    Value: !Sub "https://${PlagiarismApi}.execute-api.${AWS::Region}.amazonaws.com/${Stage}"
 
   StepFunctionsStateMachine:
     Description: Step Functions State Machine ARN
