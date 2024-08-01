@@ -98,7 +98,7 @@ public class Function
         catch (Exception e)
         {
             Logger.LogError(e);
-            throw;
+            return ApiGatewayResponse(HttpStatusCode.InternalServerError);
         }
 
         return ApiGatewayResponse(HttpStatusCode.OK);
