@@ -69,16 +69,9 @@ public class Function
             if (!isIncidentId || !isExamId | !isScore | !(token.Length >= 1 & token.Length <= 1024))
             {
                 Logger.LogInformation($"Invalid request: {request?.Body}\n\nIncidentId {incidentId} ExamId {examId} Score {score} Token {token}");
-                return new APIGatewayProxyResponse
-                {
-                    StatusCode = (int) HttpStatusCode.BadRequest,
-                    Headers = new Dictionary<string, string> {
-                        {"Content-Type", "application/json"}, 
-                        {"Access-Control-Allow-Origin", "*"},
-                        {"Access-Control-Allow-Headers", "Content-Type"},
-                        {"Access-Control-Allow-Methods", "OPTIONS,POST"}
-                    }
-                };
+
+                return ApiGatewayResponse(HttpStatusCode.BadRequest);
+                
             }
 
         Logger.LogInformation("IncidentId: {incidentId}, ExamId: {examId}, Score: {score}, Token: {token}",
@@ -104,13 +97,24 @@ public class Function
         }
         catch (Exception e)
         {
-            Logger.LogInformation(e);
+            Logger.LogError(e);
             throw;
         }
 
+        return ApiGatewayResponse(HttpStatusCode.OK);
+    }
+
+    /// <summary>
+    /// Returns ApiGatewayResponse with specified status code
+    /// </summary>
+    /// <param name="statusCode">HttpStatusCode</param>
+    /// <returns>Instance of ApiGatewayResponse</returns>
+    private APIGatewayProxyResponse ApiGatewayResponse(HttpStatusCode statusCode)
+    {
+        
         return new APIGatewayProxyResponse
-        {
-            StatusCode = (int)HttpStatusCode.OK,
+        {   
+            StatusCode = (int)statusCode,
             Headers = new Dictionary<string, string>
             {
                 { "Content-Type", "application/json" },
@@ -120,4 +124,5 @@ public class Function
             }
         };
     }
+    
 }
