@@ -57,7 +57,7 @@ States:
     Resource: 'arn:aws:states:::sns:publish.waitForTaskToken'
     Parameters:
         TopicArn: '${NotificationTopic}'
-        Message.$: "States.Format('\"IncidentId\": \"{}\", \"ExamId\": \"{}\", \"Score\": 0 , \"TaskToken\": \"{}\"', $.Payload.IncidentId, $.Payload.Exams[0].ExamId, $$.Task.Token)"
+        Message.$: "States.Format('http://localhost:3000/?IncidentId={}&ExamId={}&TaskToken={}', $.Payload.IncidentId, $.Payload.Exams[0].ExamId, $$.Task.Token)"
     Next: HasStudentPassedExam
   HasStudentPassedExam:
     Type: Choice
