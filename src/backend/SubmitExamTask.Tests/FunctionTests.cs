@@ -135,7 +135,13 @@ public class FunctionTests
         var expectedResponse = new APIGatewayProxyResponse
         {
             StatusCode = 400,
-            Headers = new Dictionary<string, string> { { "Content-Type", "application/json" } }
+            Headers = new Dictionary<string, string>
+            {
+                { "Content-Type", "application/json" },
+                { "Access-Control-Allow-Origin", "*" },
+                { "Access-Control-Allow-Headers", "Content-Type" },
+                { "Access-Control-Allow-Methods", "OPTIONS,POST" }
+            }
         };
 
         var function = new Function(mockStepFunctionsClient, mockIncidentRepository);

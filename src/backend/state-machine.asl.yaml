@@ -16,7 +16,7 @@ States:
     Type: Task
     Resource: arn:aws:states:::dynamodb:putItem
     Parameters:
-      TableName: plagiarism
+      TableName: ${IncidentsTable}
       Item:
         StudentId:
           S.$: $.StudentId
@@ -54,10 +54,10 @@ States:
         Next: TakeAdministrativeAction
   Notify student:
     Type: Task
-    Resource: 'arn:aws:states:::sns:publish.waitForTaskToken'
+    Resource: "arn:aws:states:::sns:publish.waitForTaskToken"
     Parameters:
-        TopicArn: '${NotificationTopic}'
-        Message.$: "States.Format('http://localhost:3000/?IncidentId={}&ExamId={}&TaskToken={}', $.Payload.IncidentId, $.Payload.Exams[0].ExamId, $$.Task.Token)"
+      TopicArn: "${NotificationTopic}"
+      Message.$: "States.Format('http://localhost:3000/?IncidentId={}&ExamId={}&TaskToken={}', $.Payload.IncidentId, $.Payload.Exams[0].ExamId, $$.Task.Token)"
     Next: HasStudentPassedExam
   HasStudentPassedExam:
     Type: Choice

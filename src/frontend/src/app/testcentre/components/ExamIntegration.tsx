@@ -31,8 +31,8 @@ export default function ExamIntegration({ score, setExamSubmitted }: ExamIntegra
         // in the form ?/TaskToken=baz&IncidentId=foo&ExamId=bar
         const incidentId = params.get('IncidentId') || 'Not supplied';
         const examId = params.get('ExamId') || 'Not supplied';
-        const taskToken = params.get('TaskToken') || 'Not supplied';
-        setExamData((examData)=> ({ ...examData, IncidentId: incidentId, ExamId: examId, TaskToken: taskToken }));
+        const taskToken = params.get('TaskToken')?.replaceAll(" ", "+") || 'Not supplied';
+        setExamData((examData) => ({ ...examData, IncidentId: incidentId, ExamId: examId, TaskToken: taskToken }));
     }, [params]);
 
 
