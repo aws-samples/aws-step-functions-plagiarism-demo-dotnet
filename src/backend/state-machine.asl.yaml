@@ -1,18 +1,19 @@
-StartAt: Create Incident
+StartAt: Create new incident
 Comment: >-
   Plagiarism state machine manages the process for student's plagiarism
   violation.
 States:
-  Create Incident:
+  Create new incident:
     Type: Pass
-    Next: Save Incident
+    Next: Save incident
     Parameters:
       StudentId.$: $.StudentId
       IncidentDate.$: $.IncidentDate
       IncidentId.$: States.UUID()
       IncidentResolved: false
       AdminActionRequired: false
-  Save Incident:
+  
+  Save incident:
     Type: Task
     Resource: arn:aws:states:::dynamodb:putItem
     Parameters:
@@ -28,9 +29,10 @@ States:
           BOOL.$: $.IncidentResolved
         AdminActionRequired:
           BOOL.$: $.AdminActionRequired
-    Next: ScheduleExam
+    Next: Schedule exam
     ResultPath: null
-  ScheduleExam:
+  
+  Schedule exam:
     Type: Task
     Comment: Set the next exam deadline for the student to complete the exam.
     Resource: arn:aws:states:::lambda:invoke
@@ -51,28 +53,31 @@ States:
       - ErrorEquals:
           - StudentExceededAllowableExamRetries
         ResultPath: $.Error
-        Next: TakeAdministrativeAction
+        Next: Take administrative action
+  
   Notify student:
     Type: Task
     Resource: "arn:aws:states:::sns:publish.waitForTaskToken"
     Parameters:
-      TopicArn: "${NotificationTopic}"
-      Message.$: "States.Format('http://localhost:3000/?IncidentId={}&ExamId={}&TaskToken={}', $.Payload.IncidentId, $.Payload.Exams[0].ExamId, $$.Task.Token)"
-    Next: HasStudentPassedExam
-  HasStudentPassedExam:
+        TopicArn: '${NotificationTopic}'
+        Message.$: "States.Format('{}/?IncidentId={}&ExamId={}&TaskToken={}', $.TestingCentreUrl, $.Payload.IncidentId, $.Payload.Exams[0].ExamId, $$.Task.Token)"
+    Next: Has student passed exam?
+  
+  Has student passed exam?:
     Type: Choice
     Comment: If the student has a score less than 67, they need to reschedule
     Choices:
       - Variable: $.Exams[0].Result
         NumericEquals: 0
-        Next: ResolveIncident
+        Next: Resolve incident
       - Variable: $.Exams[0].Result
         NumericEquals: 1
-        Next: ScheduleExam
+        Next: Schedule exam
       - Variable: $.Exams[0].Result
         NumericEquals: 2
-        Next: TakeAdministrativeAction
-  TakeAdministrativeAction:
+        Next: Take administrative action
+  
+  Take administrative action:
     Type: Task
     Comment: >-
       Take administrative action if student does not sit exam or fails all three
@@ -80,7 +85,7 @@ States:
     Resource: arn:aws:states:::lambda:invoke
     Parameters:
       Payload.$: $
-      FunctionName: ${TakeAdministrativeActionFunctionArn}
+      FunctionName: ${Take administrative actionFunctionArn}
     Retry:
       - ErrorEquals:
           - Lambda.ServiceException
@@ -91,7 +96,8 @@ States:
         MaxAttempts: 3
         BackoffRate: 2
     End: true
-  ResolveIncident:
+
+  Resolve incident:
     Type: Task
     Comment: Resolves the incident for the student.
     Resource: arn:aws:states:::lambda:invoke
