@@ -12,7 +12,6 @@ using AWS.Lambda.Powertools.Logging;
 using AWS.Lambda.Powertools.Metrics;
 using AWS.Lambda.Powertools.Tracing;
 using Newtonsoft.Json;
-using System.Text.Json;
 using PlagiarismRepository;
 
 // Assembly attribute to enable the Lambda function's JSON input to be converted into a .NET class.
