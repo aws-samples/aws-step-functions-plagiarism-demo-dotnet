@@ -247,6 +247,7 @@ Resources:
         ResolveIncidentFunctionArn: !GetAtt ResolveIncidentFunction.Arn
         NotificationTopic: !Ref PlagiarismTopic
         TestingCentreUrl: !Ref StudentTestingCentreUrl
+        IncidentsTable: !Ref PlagiarismIncidentsTable
       Policies:
         - LambdaInvokePolicy:
             FunctionName: !Ref ScheduleExamFunction
@@ -412,10 +413,6 @@ Outputs:
   ScheduleExamFunctionArn:
     Description: Schedule Exam Function ARN
     Value: !GetAtt ScheduleExamFunction.Arn
-  
-  SubmitExamTaskFunctionArn:
-    Description: Submit Exam Function Function ARN
-    Value: !GetAtt SubmitExamResultsFunction.Arn
 
   ResolveIncidentFunctionArn:
     Description: Resolve Incident Function ARN
