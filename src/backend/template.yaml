@@ -19,6 +19,7 @@ Metadata:
         - ES6000 # Rule disabled because SQS DLQs don't need a RedrivePolicy
         - WS2001 # Rule disabled because check does not support !ToJsonString transform
         - ES1001 # Rule disabled because our Lambda functions don't need DestinationConfig.OnFailure
+        - ES7000 # Rule disabled because SNS doesn't need a DLQ
 
 Parameters:
   Stage:
@@ -53,7 +54,6 @@ Mappings:
 # Globals
 Globals:
 
-
   Function:
     Runtime: dotnet8
     Timeout: 15
@@ -63,7 +63,7 @@ Globals:
     Tracing: Active
     Environment:
       Variables:
-        TABLE_NAME: !Ref IncidentsTable
+        TABLE_NAME: !Ref PlagiarismIncidentsTable
         SERVICE_NAMESPACE: "Plagiarism"
         POWERTOOLS_LOGGER_CASE: "PascalCase"
         POWERTOOLS_SERVICE_NAME: "Plagiarism"
@@ -74,49 +74,84 @@ Globals:
         POWERTOOLS_LOG_LEVEL: INFO # Log level for Logger (INFO, DEBUG, etc.), default
         LOG_LEVEL: INFO # Log level for Logger
 
-Resources:
-  
+Resources:  
   #### Lambda functions
-
+  
   ScheduleExamFunction:
     Type: AWS::Serverless::Function
     Properties:
-      Description: DevelopingWithDotNetStepFunctions - Schedules the  Exam for the student to complete.
+      Description: Plagiarism - Schedules the  Exam for the student to complete.
       CodeUri: ./ScheduleExamTask
       Handler: ScheduleExamTask::ScheduleExamTask.Function::FunctionHandler
-      Role: !Sub ${IncidentsTableAccessRole.Arn}
-      LoggingConfig:
-        LogGroup: !Ref PlagiarismFunctionLogGroup
+      Policies:
+        - DynamoDBWritePolicy:
+            TableName: !Ref PlagiarismIncidentsTable
+
+  # User defined log group for the ScheduleExamFunction
+  ScheduleExamFunctionLogGroup:
+    Type: AWS::Logs::LogGroup
+    DeletionPolicy: Delete
+    UpdateReplacePolicy: Delete
+    Properties:
+      LogGroupName: !Sub "/aws/lambda/${ScheduleExamFunction}"
+      RetentionInDays: !FindInMap 
+        - LogsRetentionPeriodMap
+        - !Ref Stage
+        - Days
   
   ResolveIncidentFunction:
     Type: AWS::Serverless::Function
     Properties:
-      Description: DevelopingWithDotNetStepFunctions - Marks the  incident as resolved.
+      Description: Plagiarism - Marks the  incident as resolved.
       CodeUri: ./ResolveIncidentTask
       Handler: ResolveIncidentTask::ResolveIncidentTask.Function::FunctionHandler
-      Role: !Sub ${IncidentsTableAccessRole.Arn}
-      LoggingConfig:
-        LogGroup: !Ref PlagiarismFunctionLogGroup
+      Policies:
+        - DynamoDBWritePolicy:
+            TableName: !Ref PlagiarismIncidentsTable
+
+  # User defined log group for the ResolveIncidentFunction
+  ResolveIncidentFunctionLogGroup:
+    Type: AWS::Logs::LogGroup
+    DeletionPolicy: Delete
+    UpdateReplacePolicy: Delete
+    Properties:
+      LogGroupName: !Sub "/aws/lambda/${ResolveIncidentFunction}"
+      RetentionInDays: !FindInMap 
+        - LogsRetentionPeriodMap
+        - !Ref Stage
+        - Days
 
   TakeAdministrativeActionFunction:
     Type: AWS::Serverless::Function
     Properties:
-      Description: DevelopingWithDotNetStepFunctions - Send email to administrative staff to notify staff that the student has failed all tests and action needs to be taken.
+      Description: Plagiarism - Send email to administrative staff to notify staff that the student has failed all tests and action needs to be taken.
       CodeUri: ./AdminActionTask/
       Handler: AdminActionTask::AdminActionTask.Function::FunctionHandler
-      Role: !Sub ${IncidentsTableAccessRole.Arn}
-      LoggingConfig:
-        LogGroup: !Ref PlagiarismFunctionLogGroup
+      Policies:
+        - DynamoDBWritePolicy:
+            TableName: !Ref PlagiarismIncidentsTable
 
-  SubmitExamTaskFunction:
+  # User defined log group for the TakeAdministrativeActionFunction
+  TakeAdministrativeActionFunctionLogGroup:
+    Type: AWS::Logs::LogGroup
+    DeletionPolicy: Delete
+    UpdateReplacePolicy: Delete
+    Properties:
+      LogGroupName: !Sub "/aws/lambda/${TakeAdministrativeActionFunction}"
+      RetentionInDays: !FindInMap 
+        - LogsRetentionPeriodMap
+        - !Ref Stage
+        - Days
+
+  SubmitExamResultsFunction:
     Type: AWS::Serverless::Function
     Properties:
-      Description: DevelopingWithDotNetStepFunctions - Saves the test results and invokes the callback to the SendExamNotification state in the Step Function
+      Description: Plagiarism - Saves the test results and invokes the callback to the SendExamNotification state in the Step Function
       CodeUri: ./SubmitExamTask
       Handler: SubmitExamTask::SubmitExamTask.Function::FunctionHandler
-      Role: !Sub ${IncidentsTableAccessRole.Arn}
-      LoggingConfig:
-        LogGroup: !Ref PlagiarismFunctionLogGroup
+      Policies:
+        - DynamoDBWritePolicy:
+            TableName: !Ref PlagiarismIncidentsTable
       Events:
         StepApi:
           Type: Api
@@ -124,15 +159,18 @@ Resources:
             Path: /exam
             Method: post
             RestApiId: !Ref PlagiarismApi
-  
-  # API GW Cloudwatch Log Group
-  PlagiarismFunctionLogGroup:
+
+  SubmitExamResultsFunctionLogGroup:
     Type: AWS::Logs::LogGroup
-    UpdateReplacePolicy: Delete
     DeletionPolicy: Delete
+    UpdateReplacePolicy: Delete
     Properties:
-      RetentionInDays: !FindInMap [ LogsRetentionPeriodMap, !Ref Stage, Days ]
-  
+      LogGroupName: !Sub "/aws/lambda/${SubmitExamResultsFunction}"
+      RetentionInDays: !FindInMap 
+        - LogsRetentionPeriodMap
+        - !Ref Stage
+        - Days
+
   # API Gateway
   PlagiarismApi:
     Type: AWS::Serverless::Api
@@ -144,10 +182,6 @@ Resources:
       TracingEnabled: true
       # More info about OpenApiVersion: https://docs.aws.amazon.com/serverless-application-model/latest/developerguide/sam-resource-api.html#sam-api-openapiversion
       OpenApiVersion: 3.0.1
-      Cors:
-        AllowMethods: "'OPTIONS,POST,GET'"
-        AllowHeaders: "'Content-Type,X-Amz-Date,Authorization,X-Api-Key,X-Amz-Security-Token'"
-        AllowOrigin: "'*'"
       MethodSettings:
           - MetricsEnabled: true
             ResourcePath: /*
@@ -212,7 +246,7 @@ Resources:
         TakeAdministrativeActionFunctionArn: !GetAtt TakeAdministrativeActionFunction.Arn
         ResolveIncidentFunctionArn: !GetAtt ResolveIncidentFunction.Arn
         NotificationTopic: !Ref PlagiarismTopic
-        IncidentsTable: !Ref IncidentsTable
+        TestingCentreUrl: !Ref StudentTestingCentreUrl
       Policies:
         - LambdaInvokePolicy:
             FunctionName: !Ref ScheduleExamFunction
@@ -221,7 +255,7 @@ Resources:
         - LambdaInvokePolicy:
             FunctionName: !Ref ResolveIncidentFunction
         - DynamoDBWritePolicy:
-            TableName: !Ref IncidentsTable
+            TableName: !Ref PlagiarismIncidentsTable
         - SNSPublishMessagePolicy:
             TopicName: !GetAtt PlagiarismTopic.TopicName  
         - Statement:
@@ -266,7 +300,7 @@ Resources:
       TopicArn: !Ref PlagiarismTopic
 
   # DynamoDB 
-  IncidentsTable:
+  PlagiarismIncidentsTable:
     Type: AWS::Serverless::SimpleTable
     UpdateReplacePolicy: Delete
     DeletionPolicy: Delete
@@ -304,6 +338,23 @@ Resources:
                 Resource:
                   - !Ref PlagiarismStateMachine
 
+  LambdaExecutionRole:
+      Type: "AWS::IAM::Role"
+      Properties:
+        ManagedPolicyArns:
+          - "arn:aws:iam::aws:policy/AWSXrayWriteOnlyAccess"
+          - "arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole"
+        AssumeRolePolicyDocument:
+          Version: "2012-10-17"
+          Statement:
+            - Sid: "AllowLambdaServiceToAssumeRole"
+              Effect: "Allow"
+              Action:
+                - "sts:AssumeRole"
+              Principal:
+                Service:
+                  - "lambda.amazonaws.com"
+
   IncidentsTableAccessRole:
     Type: "AWS::IAM::Role"
     Properties:
@@ -337,7 +388,7 @@ Resources:
                   - 'dynamodb:BatchWriteItem'
                   - 'dynamodb:BatchGetItem'
                 Resource:
-                  - !Sub ${IncidentsTable.Arn}
+                  - !Sub ${PlagiarismIncidentsTable.Arn}
         - PolicyName: "AllowStatesActions"
           PolicyDocument:
             Version: '2012-10-17'
@@ -364,7 +415,7 @@ Outputs:
   
   SubmitExamTaskFunctionArn:
     Description: Submit Exam Function Function ARN
-    Value: !GetAtt SubmitExamTaskFunction.Arn
+    Value: !GetAtt SubmitExamResultsFunction.Arn
 
   ResolveIncidentFunctionArn:
     Description: Resolve Incident Function ARN
