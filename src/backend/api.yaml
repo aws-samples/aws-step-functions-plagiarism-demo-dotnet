@@ -3,6 +3,7 @@ openapi: "3.0.1"
 info:
   title: "PlagiarismApi"
   version: "1.0"
+  description: "Plagiarism API allows students to submit their exams and lecturers to report plagiarism incidents."
 paths:
   /exam:
     post:
