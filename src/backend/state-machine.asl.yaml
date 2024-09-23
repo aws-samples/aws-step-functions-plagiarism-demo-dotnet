@@ -60,7 +60,7 @@ States:
     Resource: "arn:aws:states:::sns:publish.waitForTaskToken"
     Parameters:
         TopicArn: '${NotificationTopic}'
-        Message.$: "States.Format('{}/?IncidentId={}&ExamId={}&TaskToken={}', $.TestingCentreUrl, $.Payload.IncidentId, $.Payload.Exams[0].ExamId, $$.Task.Token)"
+        Message.$: "States.Format('http://localhost:3000/?IncidentId={}&ExamId={}&TaskToken={}', $.Payload.IncidentId, $.Payload.Exams[0].ExamId, $$.Task.Token)"
     Next: Has student passed exam?
   
   Has student passed exam?:
@@ -85,7 +85,7 @@ States:
     Resource: arn:aws:states:::lambda:invoke
     Parameters:
       Payload.$: $
-      FunctionName: ${Take administrative actionFunctionArn}
+      FunctionName: ${TakeAdministrativeActionFunctionArn}
     Retry:
       - ErrorEquals:
           - Lambda.ServiceException

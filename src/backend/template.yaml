@@ -33,11 +33,6 @@ Parameters:
     Type: String
     Description: Student email (testing only)
 
-  StudentTestingCentreUrl:
-    Default: "http://localhost:3000"
-    Type: String
-    Description: Endpoint for the Testing Centre website
-
 
 Conditions:
   IsProd: !Equals [!Ref Stage, Prod]
@@ -81,11 +76,14 @@ Resources:
     Type: AWS::Serverless::Function
     Properties:
       Description: Plagiarism - Schedules the  Exam for the student to complete.
-      CodeUri: ./ScheduleExamTask
-      Handler: ScheduleExamTask::ScheduleExamTask.Function::FunctionHandler
+      CodeUri: ./ScheduleExam
+      Handler: ScheduleExam::ScheduleExam.Function::FunctionHandler
       Policies:
         - DynamoDBWritePolicy:
             TableName: !Ref PlagiarismIncidentsTable
+        - DynamoDBReadPolicy:
+            TableName: !Ref PlagiarismIncidentsTable
+
 
   # User defined log group for the ScheduleExamFunction
   ScheduleExamFunctionLogGroup:
@@ -103,10 +101,12 @@ Resources:
     Type: AWS::Serverless::Function
     Properties:
       Description: Plagiarism - Marks the  incident as resolved.
-      CodeUri: ./ResolveIncidentTask
-      Handler: ResolveIncidentTask::ResolveIncidentTask.Function::FunctionHandler
+      CodeUri: ./ResolveIncident
+      Handler: ResolveIncident::ResolveIncident.Function::FunctionHandler
       Policies:
         - DynamoDBWritePolicy:
+            TableName: !Ref PlagiarismIncidentsTable
+        - DynamoDBReadPolicy:
             TableName: !Ref PlagiarismIncidentsTable
 
   # User defined log group for the ResolveIncidentFunction
@@ -125,12 +125,14 @@ Resources:
     Type: AWS::Serverless::Function
     Properties:
       Description: Plagiarism - Send email to administrative staff to notify staff that the student has failed all tests and action needs to be taken.
-      CodeUri: ./AdminActionTask/
-      Handler: AdminActionTask::AdminActionTask.Function::FunctionHandler
+      CodeUri: ./AdminAction/
+      Handler: AdminAction::AdminAction.Function::FunctionHandler
       Policies:
         - DynamoDBWritePolicy:
             TableName: !Ref PlagiarismIncidentsTable
-
+        - DynamoDBReadPolicy:
+            TableName: !Ref PlagiarismIncidentsTable
+            
   # User defined log group for the TakeAdministrativeActionFunction
   TakeAdministrativeActionFunctionLogGroup:
     Type: AWS::Logs::LogGroup
@@ -147,11 +149,19 @@ Resources:
     Type: AWS::Serverless::Function
     Properties:
       Description: Plagiarism - Saves the test results and invokes the callback to the SendExamNotification state in the Step Function
-      CodeUri: ./SubmitExamTask
-      Handler: SubmitExamTask::SubmitExamTask.Function::FunctionHandler
+      CodeUri: ./SubmitExam
+      Handler: SubmitExam::SubmitExam.Function::FunctionHandler
       Policies:
         - DynamoDBWritePolicy:
             TableName: !Ref PlagiarismIncidentsTable
+        - DynamoDBReadPolicy:
+            TableName: !Ref PlagiarismIncidentsTable
+        - Statement:
+            - Effect: Allow
+              Action:
+                - states:SendTaskSuccess
+                - states:SendTaskFailure
+              Resource: !Ref PlagiarismStateMachine
       Events:
         StepApi:
           Type: Api
@@ -176,6 +186,7 @@ Resources:
     Type: AWS::Serverless::Api
     DependsOn: PlagiarismApiGwAccountConfig
     Properties:
+      Name: !Sub "Plagiarism-API-${Stage}"
       StageName: !Ref Stage
       EndpointConfiguration:
         Type: REGIONAL
@@ -232,12 +243,12 @@ Resources:
       ManagedPolicyArns:
         - arn:aws:iam::aws:policy/service-role/AmazonAPIGatewayPushToCloudWatchLogs
   
-  # Step function
+  # Step Function
   # More info about State Machine Resource: https://docs.aws.amazon.com/serverless-application-model/latest/developerguide/sam-resource-statemachine.html
   PlagiarismStateMachine:
     Type: "AWS::Serverless::StateMachine"
     Properties:
-      Name: !Ref AWS::StackName
+      Name: !Sub "PlagiarismStateMachine-${Stage}"
       DefinitionUri: state-machine.asl.yaml
       Tracing:
         Enabled: true
@@ -246,7 +257,6 @@ Resources:
         TakeAdministrativeActionFunctionArn: !GetAtt TakeAdministrativeActionFunction.Arn
         ResolveIncidentFunctionArn: !GetAtt ResolveIncidentFunction.Arn
         NotificationTopic: !Ref PlagiarismTopic
-        TestingCentreUrl: !Ref StudentTestingCentreUrl
         IncidentsTable: !Ref PlagiarismIncidentsTable
       Policies:
         - LambdaInvokePolicy:
@@ -257,8 +267,10 @@ Resources:
             FunctionName: !Ref ResolveIncidentFunction
         - DynamoDBWritePolicy:
             TableName: !Ref PlagiarismIncidentsTable
+        - DynamoDBReadPolicy:
+            TableName: !Ref PlagiarismIncidentsTable
         - SNSPublishMessagePolicy:
-            TopicName: !GetAtt PlagiarismTopic.TopicName  
+            TopicName: !GetAtt PlagiarismTopic.TopicName
         - Statement:
             - Effect: Allow
               Action:
@@ -285,7 +297,7 @@ Resources:
     UpdateReplacePolicy: Delete
     DeletionPolicy: Delete
     Properties:
-      LogGroupName: !Sub "/aws/states/${AWS::StackName}-PlagiarismStateMachine"
+      LogGroupName: !Sub "/aws/states/PlagiarismStateMachine-${Stage}"
       RetentionInDays: !FindInMap [LogsRetentionPeriodMap, !Ref Stage, Days]
 
   # SNS Topic to use in Step Functions
@@ -306,13 +318,14 @@ Resources:
     UpdateReplacePolicy: Delete
     DeletionPolicy: Delete
     Properties:
-      TableName: !Ref AWS::StackName
+      TableName: !Sub "PlagiarismIncidents-${Stage}"
       PrimaryKey:
         Name: IncidentId
         Type: String
       ProvisionedThroughput:
         ReadCapacityUnits: 5
         WriteCapacityUnits: 5
+        
   
   #   IAM roles
   ApiGatewayStepFunctionsRole:
@@ -402,9 +415,14 @@ Resources:
                 Resource:
                   - "*"
 Outputs:
-  StepFunctionsAPIUrl:
-    Description: API URL
-    Value: !Sub "https://${PlagiarismApi}.execute-api.${AWS::Region}.amazonaws.com/${Stage}"
+
+  ApiEndpointRegisterIncident:  
+    Description: API endpoint for registering an incident
+    Value: !Sub "https://${PlagiarismApi}.execute-api.${AWS::Region}.amazonaws.com/${Stage}/incident"
+
+  ApiEndpointSubmitExamResults:
+    Description: API endpoint for submitting exam results
+    Value: !Sub "https://${PlagiarismApi}.execute-api.${AWS::Region}.amazonaws.com/${Stage}/exam"
 
   StepFunctionsStateMachine:
     Description: Step Functions State Machine ARN
@@ -413,6 +431,10 @@ Outputs:
   ScheduleExamFunctionArn:
     Description: Schedule Exam Function ARN
     Value: !GetAtt ScheduleExamFunction.Arn
+
+  SubmitExamResultsFunctionArn:
+    Description: Submit Exam Function Function ARN
+    Value: !GetAtt SubmitExamResultsFunction.Arn
 
   ResolveIncidentFunctionArn:
     Description: Resolve Incident Function ARN
