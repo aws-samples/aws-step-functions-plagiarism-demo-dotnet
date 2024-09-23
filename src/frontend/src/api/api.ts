@@ -30,7 +30,6 @@ export interface StepFunctionInfo {
 }
 
 export async function createIncident(incidentData: Incident): Promise<StepFunctionInfo> {
-    //return { "executionArn": "asdf", "startDate": "tomorrow" };
     const response = await fetch(`${API_ENDPOINT}/incident`, { method: 'POST', mode: 'cors', headers: { "Content-Type": "application/json" }, body: JSON.stringify(incidentData) });
     const { executionArn, startDate } = await response.json();
     return { executionArn, startDate };
