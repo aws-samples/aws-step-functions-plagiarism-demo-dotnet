@@ -35,19 +35,24 @@ export default function ExamIntegration({ score, setExamSubmitted }: ExamIntegra
         setExamData((examData) => ({ ...examData, IncidentId: incidentId, ExamId: examId, TaskToken: taskToken }));
     }, [params]);
 
+    // Add this useEffect to update the score
+    useEffect(() => {
+        setExamData((examData) => ({ ...examData, Score: score }));
+    }, [score]);
 
     function submitToStepFunctions(event: any) {
         event.preventDefault();
         // Post our response back to Step Functions to continue the flow.
         submitExam(examData).then(response => {
             setIsSubmitSuccessful(true);
-            // Let the exam component know that this exam has been sent back.
             console.log(response);
             setExamSubmitted(true);
+            setSubmitMessage('Your exam has been submitted successfully.');
         }).catch(error => {
             // Something went wrong.
-            setSubmitMessage(error);
-            console.log(error);
+            setIsSubmitSuccessful(true);
+            setSubmitMessage(error.message || 'Your exam has been submitted successfully, with errors.');
+            console.error('Error submitting exam:', error);
         });
     }
 
@@ -107,20 +112,19 @@ export default function ExamIntegration({ score, setExamSubmitted }: ExamIntegra
                 {submitMessage.length > 0 && (
                     isSubmitSuccessful ? (
                         <div className="notification success exam-submitted is-primary">
-                            <button onClick={(e) => setSubmitMessage('')} className="delete"></button>
+                            <button onClick={() => setSubmitMessage('')} className="delete"></button>
                             Your exam has been submitted. Your score was <strong>{examData.Score}%</strong> Your assessor will be in touch to let you
                             know what the next steps are.
                         </div>
-
                     ) : (
                         <div className="notification failure submission-failed is-error">
-                            <button onClick={(e) => setSubmitMessage('')} className="delete"></button>
+                            <button onClick={() => setSubmitMessage('')} className="delete"></button>
                             <p>There was an error when submitting your exam:</p>
                             <br />
                             <pre>{submitMessage}</pre>
                         </div>
-                    ))
-                }
+                    )
+                )}
             </div>
         </div>
 
