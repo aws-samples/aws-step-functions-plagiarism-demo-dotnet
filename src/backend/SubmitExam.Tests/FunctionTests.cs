@@ -15,7 +15,7 @@ using Xunit;
 using Xunit.Abstractions;
 using PlagiarismRepository;
 
-namespace SubmitExamTask.Tests;
+namespace SubmitExam.Tests;
 
 public class FunctionTests
 {
@@ -66,7 +66,7 @@ public class FunctionTests
             {
                 { "Content-Type", "application/json" },
                 { "Access-Control-Allow-Origin", "*" },
-                { "Access-Control-Allow-Headers", "Content-Type" },
+                { "Access-Control-Allow-Headers", "Content-Type,X-Requested-With,Accept" },
                 { "Access-Control-Allow-Methods", "OPTIONS,POST" }
             }
         };
@@ -139,7 +139,7 @@ public class FunctionTests
             {
                 { "Content-Type", "application/json" },
                 { "Access-Control-Allow-Origin", "*" },
-                { "Access-Control-Allow-Headers", "Content-Type" },
+                { "Access-Control-Allow-Headers", "Content-Type,X-Requested-With,Accept" },
                 { "Access-Control-Allow-Methods", "OPTIONS,POST" },
             }
         };
@@ -180,7 +180,7 @@ public class FunctionTests
             {
                 { "Content-Type", "application/json" },
                 { "Access-Control-Allow-Origin", "*" },
-                { "Access-Control-Allow-Headers", "Content-Type" },
+                { "Access-Control-Allow-Headers", "Content-Type,X-Requested-With,Accept" },
                 { "Access-Control-Allow-Methods", "OPTIONS,POST" },
             }
         };

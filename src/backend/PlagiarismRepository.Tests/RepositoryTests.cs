@@ -2,7 +2,6 @@
 // SPDX-License-Identifier: MIT-0
 
 using System;
-using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
@@ -26,17 +25,45 @@ public class RepositoryTests
     public RepositoryTests(ITestOutputHelper testOutputHelper)
     {
         _testOutputHelper = testOutputHelper;
-
-
+        
         // dynamodb client using DynamoDB local
         var dynamoDbConfig = new AmazonDynamoDBConfig
         {
-            ServiceURL = "http://localhost:8000"
+            ServiceURL = "http://localhost:8000", 
+            Timeout = new TimeSpan(0,0,5), 
         };
-
         _dynamoDbClient = new AmazonDynamoDBClient(dynamoDbConfig);
-
+        EnsureDockerContainerRunning();
         SetupTableAsync().Wait();
+    }
+
+
+    private void EnsureDockerContainerRunning()
+    {
+        var retryCount = 0;
+        const int maxRetries = 3; // Reduced from 5
+        const int retryDelayMs = 1000; // Reduced from 2000
+
+        while (retryCount < maxRetries)
+        {
+            try
+            {
+                // Attempt to list tables to check if DynamoDB is responsive
+                _dynamoDbClient.ListTablesAsync().Wait(TimeSpan.FromSeconds(2)); // Added timeout
+                _testOutputHelper.WriteLine("DynamoDB Local container is running.");
+                return;
+            }
+            catch (Exception ex)
+            {
+                _testOutputHelper.WriteLine($"Attempt {retryCount + 1}: DynamoDB Local container is not ready. Retrying in {retryDelayMs}ms...");
+                _testOutputHelper.WriteLine($"Error: {ex.Message}");
+                Thread.Sleep(retryDelayMs);
+                retryCount++;
+            }
+        }
+
+        throw new Exception("Failed to connect to DynamoDB Local after multiple attempts. Ensure the Docker container is running.");
+
     }
 
     [Fact]
@@ -44,15 +71,13 @@ public class RepositoryTests
     {
         _incidentRepository = new IncidentRepository(_dynamoDbClient, _tableName);
 
-        var newIncident = new Incident();
-        newIncident.IncidentId = Guid.NewGuid();
-        newIncident.StudentId = "123";
-        newIncident.IncidentDate = new DateTime(2018, 02, 03);
-        newIncident.ResolutionDate = null;
-        // newIncident.Exams = new List<Exam>
-        // {
-        //     new(Guid.NewGuid(), new DateTime(2018, 02, 17), 0)
-        // };
+        var newIncident = new Incident
+        {
+            IncidentId = Guid.NewGuid(),
+            StudentId = "123",
+            IncidentDate = new DateTime(2018, 02, 03),
+            ResolutionDate = null
+        };
 
         var incident = _incidentRepository.SaveIncident(newIncident);
 
@@ -64,11 +89,13 @@ public class RepositoryTests
     {
         _incidentRepository = new IncidentRepository(_dynamoDbClient, _tableName);
 
-        var state = new Incident();
-        state.IncidentId = Guid.NewGuid();
-        state.StudentId = "123";
-        state.IncidentDate = new DateTime(2018, 02, 03);
-        state.ResolutionDate = null;
+        var state = new Incident
+        {
+            IncidentId = Guid.NewGuid(),
+            StudentId = "123",
+            IncidentDate = new DateTime(2018, 02, 03),
+            ResolutionDate = null
+        };
         // state.Exams = new List<Exam>
         // {
         //     new(Guid.NewGuid(), new DateTime(2018, 02, 17), 0),
@@ -94,17 +121,13 @@ public class RepositoryTests
 
         var incidentDate = DateTime.Now;
 
-        var state = new Incident();
-        state.IncidentId = Guid.NewGuid();
-        state.StudentId = "123";
-        state.IncidentDate = incidentDate;
-        // state.Exams = new List<Exam>
-        // {
-        //     new Exam(Guid.NewGuid(), new DateTime(DateTime.Now.Year, DateTime.Now.Month, DateTime.Now.Day), 0),
-        //     new Exam(Guid.NewGuid(), new DateTime(DateTime.Now.Year, DateTime.Now.Month, DateTime.Now.Day + 1), 65),
-        //     new Exam(Guid.NewGuid(), new DateTime(DateTime.Now.Year, DateTime.Now.Month, DateTime.Now.Day + 2), 99)
-        // };
-        state.ResolutionDate = DateTime.Now;
+        var state = new Incident
+        {
+            IncidentId = Guid.NewGuid(),
+            StudentId = "123",
+            IncidentDate = incidentDate,
+            ResolutionDate = DateTime.Now
+        };
 
         var incident = _incidentRepository.SaveIncident(state);
 

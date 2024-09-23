@@ -81,6 +81,7 @@ public class IncidentRepository : IIncidentRepository
         try
         {
             Logger.LogInformation($"Saving incident with id {incident.IncidentId}");
+            
             _dynamoDbContext.SaveAsync(incident).Wait();
             return incident;
         }

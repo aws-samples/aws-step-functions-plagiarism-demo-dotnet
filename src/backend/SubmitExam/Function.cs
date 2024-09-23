@@ -17,7 +17,7 @@ using PlagiarismRepository;
 // Assembly attribute to enable the Lambda function's JSON input to be converted into a .NET class.
 [assembly: LambdaSerializer(typeof(Amazon.Lambda.Serialization.SystemTextJson.DefaultLambdaJsonSerializer))]
 
-namespace SubmitExamTask;
+namespace SubmitExam;
 
 public class Function
 {
@@ -29,7 +29,7 @@ public class Function
     /// </summary>
     public Function()
     {
-        Tracing.RegisterForAllServices();
+        Tracing.RegisterForAllServices();                                                                                                                                                                                                                                                                                                                       
         _incidentRepository = new IncidentRepository(Environment.GetEnvironmentVariable("TABLE_NAME"));
         _amazonStepFunctionsClient = new AmazonStepFunctionsClient();
     }
@@ -118,7 +118,7 @@ public class Function
             {
                 { "Content-Type", "application/json" },
                 { "Access-Control-Allow-Origin", "*" },
-                { "Access-Control-Allow-Headers", "Content-Type" },
+                { "Access-Control-Allow-Headers", "Content-Type,X-Requested-With,Accept" },
                 { "Access-Control-Allow-Methods", "OPTIONS,POST" }
             }
         };

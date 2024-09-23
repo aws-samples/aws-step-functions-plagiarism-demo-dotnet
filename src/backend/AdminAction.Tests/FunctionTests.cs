@@ -1,8 +1,6 @@
 ﻿// Copyright Amazon.com, Inc. or its affiliates. All Rights Reserved.
 // SPDX-License-Identifier: MIT-0
 
-using System;
-using System.Collections.Generic;
 using Xunit;
 using Amazon.Lambda.TestUtilities;
 using NSubstitute;
@@ -10,8 +8,7 @@ using Plagiarism;
 using PlagiarismRepository;
 using Xunit.Abstractions;
 
-
-namespace ScheduleExamTask.Tests;
+namespace AdminAction.Tests;
 
 public class FunctionTests
 {
@@ -27,7 +24,7 @@ public class FunctionTests
     }
 
     [Fact]
-    public void Returns_Exam()
+    public void ResolveIncidentFunctionTest()
     {
         var mockIncidentRepository
             = Substitute.For<IIncidentRepository>();
@@ -40,40 +37,21 @@ public class FunctionTests
         state.IncidentId = Guid.NewGuid();
         state.StudentId = "123";
         state.IncidentDate = new DateTime(2018, 02, 03);
-        
-        
-        // Call function with mock repository
-        var response = function.FunctionHandler(state, context);
-        
-        Assert.NotNull(response.Exams);
-        Assert.Single(response.Exams);
-    }
-    
-    [Fact]
-    public void Returns_two_exams()
-    {
-        var mockIncidentRepository
-            = Substitute.For<IIncidentRepository>();
-
-
-        var function = new Function(mockIncidentRepository);
-        var context = new TestLambdaContext();
-
-        var state = new Incident();
-        state.IncidentId = Guid.NewGuid();
-        state.StudentId = "123";
-        state.IncidentDate = new DateTime(2018, 02, 03);
-        state.Exams = new List<Exam>
+        state.Exams = new List<Exam>()
         {
-            new Exam() { ExamId = Guid.NewGuid(), ExamDeadline = DateTime.Now, Score = 50, NotificationSent = true }
+            new Exam(Guid.NewGuid(), new DateTime(2018, 02, 10), 10),
+            new Exam(Guid.NewGuid(), new DateTime(2018, 02, 17), 65)
         };
-        
-        
+        state.ResolutionDate = null;
+
         // Call function with mock repository
-        var response = function.FunctionHandler(state, context);
-        
-        Assert.NotNull(response.Exams);
-        Assert.Equal(2, response.Exams.Count);
+        function.FunctionHandler(state, context);
+
+        // assert the call to incident repository had state with Resolution date not set to null
+        mockIncidentRepository.Received().SaveIncident(Arg.Is<Incident>(i => i.ResolutionDate != null));
+        mockIncidentRepository.Received().SaveIncident(Arg.Is<Incident>(i => i.IncidentResolved == false));
+        mockIncidentRepository.Received().SaveIncident(Arg.Is<Incident>(i => i.AdminActionRequired == true));
+
+        _testOutputHelper.WriteLine("Success");
     }
-    
 }

@@ -1,6 +1,8 @@
 ﻿// Copyright Amazon.com, Inc. or its affiliates. All Rights Reserved.
 // SPDX-License-Identifier: MIT-0
 
+using System;
+using System.Collections.Generic;
 using Xunit;
 using Amazon.Lambda.TestUtilities;
 using NSubstitute;
@@ -8,7 +10,8 @@ using Plagiarism;
 using PlagiarismRepository;
 using Xunit.Abstractions;
 
-namespace AdminActionTask.Tests;
+
+namespace ResolveIncident.Tests;
 
 public class FunctionTests
 {
@@ -22,6 +25,7 @@ public class FunctionTests
         Environment.SetEnvironmentVariable("TABLE_NAME", "IncidentsTable");
         Environment.SetEnvironmentVariable("POWERTOOLS_METRICS_NAMESPACE", "Plagiarism");
     }
+
 
     [Fact]
     public void ResolveIncidentFunctionTest()
@@ -49,9 +53,6 @@ public class FunctionTests
 
         // assert the call to incident repository had state with Resolution date not set to null
         mockIncidentRepository.Received().SaveIncident(Arg.Is<Incident>(i => i.ResolutionDate != null));
-        mockIncidentRepository.Received().SaveIncident(Arg.Is<Incident>(i => i.IncidentResolved == false));
-        mockIncidentRepository.Received().SaveIncident(Arg.Is<Incident>(i => i.AdminActionRequired == true));
-
-        _testOutputHelper.WriteLine("Success");
+        mockIncidentRepository.Received().SaveIncident(Arg.Is<Incident>(i => i.IncidentResolved == true));
     }
 }
