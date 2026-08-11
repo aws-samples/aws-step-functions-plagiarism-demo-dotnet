@@ -46,16 +46,18 @@ Here is a sample from the state machine:
     Type: Task
     Resource: "arn:aws:states:::sns:publish.waitForTaskToken"
     TimeoutSeconds: 604800
-    Parameters:
-        TopicArn: '${NotificationTopic}'
-        Message.$: "States.Format('${TestingCentreUrl}/?IncidentId={}&ExamId={}&TaskToken={}', $.IncidentId, $.Exams[0].ExamId, $$.Task.Token)"
+    Arguments:
+      TopicArn: '${NotificationTopic}'
+      Message: "{% '${TestingCentreUrl}/?IncidentId=' & $states.input.IncidentId & '&ExamId=' & $states.input.Exams[0].ExamId & '&TaskToken=' & $states.context.Task.Token %}"
     Next: Has student passed exam?
     Catch:
       - ErrorEquals:
           - States.Timeout
-        ResultPath: $.Error
+        Output: "{% $merge([$states.input, {'Error': $states.errorOutput}]) %}"
         Next: Take administrative action
 ```
+
+The state machine uses the [JSONata query language](https://docs.aws.amazon.com/step-functions/latest/dg/transforming-data.html) for data transformation.
 
 Once the student receives the email, the Task Token is passed to the Testing Centre. The student answers the questions and submits the results to the `/exam` resource on the API. The Lambda integration processes the TaskToken and passes the results of the waiting execution to continue the workflow execution.
 

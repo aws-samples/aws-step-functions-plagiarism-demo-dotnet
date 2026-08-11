@@ -1,3 +1,4 @@
+QueryLanguage: JSONata
 StartAt: Create new incident
 Comment: >-
   Plagiarism state machine manages the process for student's plagiarism
@@ -5,40 +6,41 @@ Comment: >-
 States:
   Create new incident:
     Type: Pass
-    Next: Save incident
-    Parameters:
-      StudentId.$: $.StudentId
-      IncidentDate.$: $.IncidentDate
-      IncidentId.$: States.UUID()
+    Output:
+      StudentId: "{% $states.input.StudentId %}"
+      IncidentDate: "{% $states.input.IncidentDate %}"
+      IncidentId: "{% $uuid() %}"
       IncidentResolved: false
       AdminActionRequired: false
-  
+    Next: Save incident
+
   Save incident:
     Type: Task
     Resource: arn:aws:states:::dynamodb:putItem
-    Parameters:
+    Arguments:
       TableName: ${IncidentsTable}
       Item:
         StudentId:
-          S.$: $.StudentId
+          S: "{% $states.input.StudentId %}"
         IncidentDate:
-          S.$: $.IncidentDate
+          S: "{% $states.input.IncidentDate %}"
         IncidentId:
-          S.$: $.IncidentId
+          S: "{% $states.input.IncidentId %}"
         IncidentResolved:
-          BOOL.$: $.IncidentResolved
+          BOOL: "{% $states.input.IncidentResolved %}"
         AdminActionRequired:
-          BOOL.$: $.AdminActionRequired
+          BOOL: "{% $states.input.AdminActionRequired %}"
+    # Discard the DynamoDB response and pass the incident through unchanged
+    Output: "{% $states.input %}"
     Next: Schedule exam
-    ResultPath: null
-  
+
   Schedule exam:
     Type: Task
     Comment: Set the next exam deadline for the student to complete the exam.
     Resource: arn:aws:states:::lambda:invoke
-    Parameters:
-      Payload.$: $
+    Arguments:
       FunctionName: ${ScheduleExamFunctionArn}
+      Payload: "{% $states.input %}"
     Retry:
       - ErrorEquals:
           - Lambda.ServiceException
@@ -48,14 +50,16 @@ States:
         IntervalSeconds: 1
         MaxAttempts: 3
         BackoffRate: 2
-    OutputPath: $.Payload
-    Next: Notify student
+    # Unwrap the Lambda invocation envelope so downstream states see the incident
+    Output: "{% $states.result.Payload %}"
     Catch:
       - ErrorEquals:
           - StudentExceededAllowableExamRetries
-        ResultPath: $.Error
+        # Preserve the incident and attach the error details
+        Output: "{% $merge([$states.input, {'Error': $states.errorOutput}]) %}"
         Next: Take administrative action
-  
+    Next: Notify student
+
   Notify student:
     Type: Task
     Resource: "arn:aws:states:::sns:publish.waitForTaskToken"
@@ -64,40 +68,38 @@ States:
       submitted. If the exam deadline (7 days) passes without a submission,
       administrative action is taken.
     TimeoutSeconds: 604800
-    Parameters:
-        TopicArn: '${NotificationTopic}'
-        Message.$: "States.Format('${TestingCentreUrl}/?IncidentId={}&ExamId={}&TaskToken={}', $.IncidentId, $.Exams[0].ExamId, $$.Task.Token)"
-    Next: Has student passed exam?
+    Arguments:
+      TopicArn: '${NotificationTopic}'
+      Message: "{% '${TestingCentreUrl}/?IncidentId=' & $states.input.IncidentId & '&ExamId=' & $states.input.Exams[0].ExamId & '&TaskToken=' & $states.context.Task.Token %}"
     Catch:
       - ErrorEquals:
           - States.Timeout
-        ResultPath: $.Error
+        # Preserve the incident and attach the error details
+        Output: "{% $merge([$states.input, {'Error': $states.errorOutput}]) %}"
         Next: Take administrative action
-  
+    Next: Has student passed exam?
+
   Has student passed exam?:
     Type: Choice
     Comment: If the student has a score less than 67, they need to reschedule
     Choices:
-      - Variable: $.Exams[0].Result
-        NumericEquals: 0
+      - Condition: "{% $states.input.Exams[0].Result = 0 %}"
         Next: Resolve incident
-      - Variable: $.Exams[0].Result
-        NumericEquals: 1
+      - Condition: "{% $states.input.Exams[0].Result = 1 %}"
         Next: Schedule exam
-      - Variable: $.Exams[0].Result
-        NumericEquals: 2
+      - Condition: "{% $states.input.Exams[0].Result = 2 %}"
         Next: Take administrative action
     Default: Take administrative action
-  
+
   Take administrative action:
     Type: Task
     Comment: >-
       Take administrative action if student does not sit exam or fails all three
       attempts.
     Resource: arn:aws:states:::lambda:invoke
-    Parameters:
-      Payload.$: $
+    Arguments:
       FunctionName: ${TakeAdministrativeActionFunctionArn}
+      Payload: "{% $states.input %}"
     Retry:
       - ErrorEquals:
           - Lambda.ServiceException
@@ -113,9 +115,9 @@ States:
     Type: Task
     Comment: Resolves the incident for the student.
     Resource: arn:aws:states:::lambda:invoke
-    Parameters:
-      Payload.$: $
+    Arguments:
       FunctionName: ${ResolveIncidentFunctionArn}
+      Payload: "{% $states.input %}"
     Retry:
       - ErrorEquals:
           - Lambda.ServiceException
