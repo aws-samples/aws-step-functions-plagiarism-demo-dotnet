@@ -1,8 +1,8 @@
 # AWS Step Functions Plagiarism Demo for .NET
 
-This sample seeks to demonstrate how you can use implement a simple workflow using [AWS Step Functions](https://aws.amazon.com/step-functions/) and other AWS services, that involves human interaction.
+This sample seeks to demonstrate how you can implement a simple workflow using [AWS Step Functions](https://aws.amazon.com/step-functions/) and other AWS services, that involves human interaction.
 
-It demonstrates how you can combine Step Functions, using the [service integration callback pattern](https://docs.aws.amazon.com/step-functions/latest/dg/connect-to-resource.html#connect-wait-token) to interface with a website that provides additional information throught the execution of the workflow, with [AWS Lambda](https://aws.amazon.com/lambda/), [Amazon DynamoDB](https://aws.amazon.com/dynamodb/), and [Powertools for AWS](https://docs.powertools.aws.dev/lambda/dotnet/), using the latest version of [Microsoft .NET](https://dotnet.microsoft.com/).
+It demonstrates how you can combine Step Functions, using the [service integration callback pattern](https://docs.aws.amazon.com/step-functions/latest/dg/connect-to-resource.html#connect-wait-token) to interface with a website that provides additional information throughout the execution of the workflow, with [AWS Lambda](https://aws.amazon.com/lambda/), [Amazon DynamoDB](https://aws.amazon.com/dynamodb/), and [Powertools for AWS](https://docs.powertools.aws.dev/lambda/dotnet/), using the latest version of [Microsoft .NET](https://dotnet.microsoft.com/).
 
 You will also see how we use the [AWS Serverless Application Model (SAM)](https://github.com/awslabs/serverless-application-model) to define and model your Serverless application, and use [AWS SAM CLI](https://github.com/awslabs/aws-sam-cli) to build and deploy it.
 
@@ -25,7 +25,7 @@ Visually, the process looks like this:
 
 ### The Architecture
 
-The solution has three main comonents:
+The solution has three main components:
 
 1. The Serverless backend application
 1. The "admin" website (http://localhost:3000/admin) which is used by university staff to register plagiarism incidents.
@@ -37,18 +37,24 @@ The incident captured at via the admin website initiates the AWS Step Function e
 
 ![Integration Request](media/api-step.png "Integration Request")
 
-Once the the exam is scheduled, we use an Amazon SNS Integration Task with a `.waitForTaskToken` (see [AWS docs](https://docs.aws.amazon.com/step-functions/latest/dg/connect-to-resource.html#connect-wait-token)). The Task Token is passed to the function (using built in reference of `$$.Task.Token`) which in turn generates the email notifying the student of the exam requirements.
+Once the exam is scheduled, we use an Amazon SNS Integration Task with a `.waitForTaskToken` (see [AWS docs](https://docs.aws.amazon.com/step-functions/latest/dg/connect-to-resource.html#connect-wait-token)). The Task Token is passed to the function (using built in reference of `$$.Task.Token`) which in turn generates the email notifying the student of the exam requirements. If the student does not complete the exam within the deadline (7 days), the workflow times out and administrative action is taken.
 
-The result of the exam pass. Here is a sample from the state machine:
+Here is a sample from the state machine:
 
 ``` yaml
   Notify student:
     Type: Task
     Resource: "arn:aws:states:::sns:publish.waitForTaskToken"
+    TimeoutSeconds: 604800
     Parameters:
         TopicArn: '${NotificationTopic}'
-        Message.$: "States.Format('http://localhost:3000/?IncidentId={}&ExamId={}&TaskToken={}', $.Payload.IncidentId, $.Payload.Exams[0].ExamId, $$.Task.Token)"
+        Message.$: "States.Format('${TestingCentreUrl}/?IncidentId={}&ExamId={}&TaskToken={}', $.IncidentId, $.Exams[0].ExamId, $$.Task.Token)"
     Next: Has student passed exam?
+    Catch:
+      - ErrorEquals:
+          - States.Timeout
+        ResultPath: $.Error
+        Next: Take administrative action
 ```
 
 Once the student receives the email, the Task Token is passed to the Testing Centre. The student answers the questions and submits the results to the `/exam` resource on the API. The Lambda integration processes the TaskToken and passes the results of the waiting execution to continue the workflow execution.
@@ -56,6 +62,8 @@ Once the student receives the email, the Task Token is passed to the Testing Cen
 Tip: Use the payload in the email that is sent to you to simulate the response. Make sure you modify the score before sending it to the Plagiarism API.
 
 ## Running the demo
+
+> **Security note:** The API endpoints deployed by this sample are **unauthenticated** — anyone with the URL can register incidents and start workflow executions. This is intentional to keep the demo simple. If you adapt this sample for real use, add an authorizer (IAM, Amazon Cognito, or a Lambda authorizer) to the API, and restrict the CORS configuration to your site's origin.
 
 1. Deploy the backend using AWS SAM CLI
 
@@ -65,7 +73,7 @@ Tip: Use the payload in the email that is sent to you to simulate the response. 
     sam deploy --stack-name plagiarism --guided
     ```
     
-    **Note:** Make sure you add your emial to the `ToEmail` parameter when prompted.
+    **Note:** Make sure you add your email to the `ToEmail` parameter when prompted.
 
 1. Once you have deployed the backend, use the AWS CLI to describe the outputs of the stack to get the API URL
 
@@ -89,7 +97,11 @@ Tip: Use the payload in the email that is sent to you to simulate the response. 
     +--------------------------------------+----------------------------------------------------------------------------------------------------------------+
     ```
 
-1. Open the `src/frontend/.env` file in the frontend directory and update the `NEXT_PUBLIC_API_ENDPOINT` parameter with the `ApiEndpointSubmitExamResults` API URL you got from the backend output.
+1. Open the `src/frontend/.env` file in the frontend directory and update the `NEXT_PUBLIC_API_ENDPOINT` parameter with the **base URL** of the API (the `ApiEndpointSubmitExamResults` output without the trailing `/exam`), for example:
+
+    ```
+    NEXT_PUBLIC_API_ENDPOINT="https://1a2b3c4d5e.execute-api.ap-southeast-2.amazonaws.com/dev"
+    ```
 
 1. Now build and run the frontend
 
@@ -105,7 +117,7 @@ Tip: Use the payload in the email that is sent to you to simulate the response. 
 
 1. Using the `ApiEndpointRegisterIncident` API output from the previous step, register an incident by opening the admin website at http://localhost:3000/admin and clicking the "Register Incident" button.
 
-    Alternively you can use curl to register an incident:
+    Alternatively you can use curl to register an incident:
 
     ```bash
     curl --request POST \
