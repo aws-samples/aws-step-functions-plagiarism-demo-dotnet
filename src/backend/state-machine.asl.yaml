@@ -48,6 +48,7 @@ States:
         IntervalSeconds: 1
         MaxAttempts: 3
         BackoffRate: 2
+    OutputPath: $.Payload
     Next: Notify student
     Catch:
       - ErrorEquals:
@@ -58,10 +59,20 @@ States:
   Notify student:
     Type: Task
     Resource: "arn:aws:states:::sns:publish.waitForTaskToken"
+    Comment: >-
+      Notifies the student of the exam requirement and waits for the exam to be
+      submitted. If the exam deadline (7 days) passes without a submission,
+      administrative action is taken.
+    TimeoutSeconds: 604800
     Parameters:
         TopicArn: '${NotificationTopic}'
-        Message.$: "States.Format('http://localhost:3000/?IncidentId={}&ExamId={}&TaskToken={}', $.Payload.IncidentId, $.Payload.Exams[0].ExamId, $$.Task.Token)"
+        Message.$: "States.Format('${TestingCentreUrl}/?IncidentId={}&ExamId={}&TaskToken={}', $.IncidentId, $.Exams[0].ExamId, $$.Task.Token)"
     Next: Has student passed exam?
+    Catch:
+      - ErrorEquals:
+          - States.Timeout
+        ResultPath: $.Error
+        Next: Take administrative action
   
   Has student passed exam?:
     Type: Choice
@@ -76,6 +87,7 @@ States:
       - Variable: $.Exams[0].Result
         NumericEquals: 2
         Next: Take administrative action
+    Default: Take administrative action
   
   Take administrative action:
     Type: Task

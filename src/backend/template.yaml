@@ -6,9 +6,9 @@ Transform:
   - AWS::Serverless-2016-10-31
 Description: >
   Developing with Step Functions Demo application. Scenario - University students caught plagiarising on exams 
-  and assignments are asked required to take exams to test that know how to reference properly. 
-  Students get three attempts before action is taken. This demo uses exposes an AWS Step Function via an Amazon API Gateway. 
-  The step-function definition invokes tasks via AWS Lambda (.NET 8), that store results in Amazon DynamoDB. 
+  and assignments are required to take an exam to test that they know how to reference properly. 
+  Students get three attempts before action is taken. This demo exposes an AWS Step Function via an Amazon API Gateway. 
+  The step-function definition invokes tasks via AWS Lambda (.NET 10), that store results in Amazon DynamoDB. 
   Notifications are implemented via Amazon SNS and AWS X-Ray provides distributed tracing capability.
 
 Metadata:
@@ -32,15 +32,20 @@ Parameters:
   ToEmail:
     Type: String
     Description: Student email (testing only)
+    AllowedPattern: '^[^\s@]+@[^\s@]+\.[^\s@]+$'
+    ConstraintDescription: Must be a valid email address
+
+  TestingCentreUrl:
+    Type: String
+    Description: Base URL of the testing centre website, used in exam notification links
+    Default: http://localhost:3000
 
 
 Conditions:
-  IsProd: !Equals [!Ref Stage, Prod]
+  IsProd: !Equals [!Ref Stage, prod]
   
 Mappings:
   LogsRetentionPeriodMap:
-    local:
-      Days: 3
     dev:
       Days: 3
     prod:
@@ -50,7 +55,7 @@ Mappings:
 Globals:
 
   Function:
-    Runtime: dotnet8
+    Runtime: dotnet10
     Timeout: 15
     MemorySize: 512
     Architectures:
@@ -63,7 +68,8 @@ Globals:
         POWERTOOLS_LOGGER_CASE: "PascalCase"
         POWERTOOLS_SERVICE_NAME: "Plagiarism"
         POWERTOOLS_TRACE_DISABLED: "false" # Explicitly disables tracing, default
-        POWERTOOLS_LOGGER_LOG_EVENT: "true" # Logs incoming event, default
+        # Do not log full events in prod: payloads contain task tokens and student PII
+        POWERTOOLS_LOGGER_LOG_EVENT: !If [IsProd, "false", "true"]
         POWERTOOLS_LOGGER_SAMPLE_RATE: "0" # Debug log sampling percentage, default
         POWERTOOLS_METRICS_NAMESPACE: "Plagiarism"
         POWERTOOLS_LOG_LEVEL: INFO # Log level for Logger (INFO, DEBUG, etc.), default
@@ -100,13 +106,12 @@ Resources:
   ResolveIncidentFunction:
     Type: AWS::Serverless::Function
     Properties:
-      Description: Plagiarism - Marks the  incident as resolved.
+      Description: Plagiarism - Marks the incident as resolved.
       CodeUri: ./ResolveIncident
       Handler: ResolveIncident::ResolveIncident.Function::FunctionHandler
       Policies:
+        # Write-only: this function only saves the resolved incident
         - DynamoDBWritePolicy:
-            TableName: !Ref PlagiarismIncidentsTable
-        - DynamoDBReadPolicy:
             TableName: !Ref PlagiarismIncidentsTable
 
   # User defined log group for the ResolveIncidentFunction
@@ -128,9 +133,8 @@ Resources:
       CodeUri: ./AdminAction/
       Handler: AdminAction::AdminAction.Function::FunctionHandler
       Policies:
+        # Write-only: this function only saves the incident flagged for admin action
         - DynamoDBWritePolicy:
-            TableName: !Ref PlagiarismIncidentsTable
-        - DynamoDBReadPolicy:
             TableName: !Ref PlagiarismIncidentsTable
             
   # User defined log group for the TakeAdministrativeActionFunction
@@ -198,7 +202,7 @@ Resources:
             ResourcePath: /*
             HttpMethod: "*"
             LoggingLevel: !If [ IsProd, ERROR, INFO ]
-            ThrottlingBurstLimit: 10
+            ThrottlingBurstLimit: 50
             ThrottlingRateLimit: 100
       AccessLogSetting:
         DestinationArn: !GetAtt PlagiarismApiLogGroup.Arn
@@ -258,6 +262,7 @@ Resources:
         ResolveIncidentFunctionArn: !GetAtt ResolveIncidentFunction.Arn
         NotificationTopic: !Ref PlagiarismTopic
         IncidentsTable: !Ref PlagiarismIncidentsTable
+        TestingCentreUrl: !Ref TestingCentreUrl
       Policies:
         - LambdaInvokePolicy:
             FunctionName: !Ref ScheduleExamFunction
@@ -274,6 +279,8 @@ Resources:
         - Statement:
             - Effect: Allow
               Action:
+                # Required for Step Functions to deliver logs to CloudWatch.
+                # These log-delivery actions do not support resource-level scoping.
                 - logs:CreateLogDelivery
                 - logs:GetLogDelivery
                 - logs:UpdateLogDelivery
@@ -282,14 +289,15 @@ Resources:
                 - logs:PutResourcePolicy
                 - logs:DescribeResourcePolicies
                 - logs:DescribeLogGroups
-                - cloudwatch:PutMetricData
               Resource: "*"
       Logging:
         Destinations:
           - CloudWatchLogsLogGroup:
               LogGroupArn: !GetAtt PlagiarismStateMachineLogGroup.Arn
-        Level: ALL
-        IncludeExecutionData: true
+        # ALL + execution data logs every state's input/output, which includes
+        # task tokens and student PII - restrict in prod
+        Level: !If [IsProd, ERROR, ALL]
+        IncludeExecutionData: !If [IsProd, false, true]
 
   # Store PlagiarismStateMachineLogGroup workflow execution logs
   PlagiarismStateMachineLogGroup:
@@ -303,6 +311,8 @@ Resources:
   # SNS Topic to use in Step Functions
   PlagiarismTopic:
     Type: AWS::SNS::Topic
+    Properties:
+      KmsMasterKeyId: alias/aws/sns
 
   # Email subscription for topic
   PlagiarismSubscription:
@@ -322,9 +332,9 @@ Resources:
       PrimaryKey:
         Name: IncidentId
         Type: String
-      ProvisionedThroughput:
-        ReadCapacityUnits: 5
-        WriteCapacityUnits: 5
+      # No ProvisionedThroughput: table uses on-demand (PAY_PER_REQUEST) billing
+      PointInTimeRecoverySpecification:
+        PointInTimeRecoveryEnabled: !If [IsProd, true, false]
         
   
   #   IAM roles
@@ -352,68 +362,138 @@ Resources:
                 Resource:
                   - !Ref PlagiarismStateMachine
 
-  LambdaExecutionRole:
-      Type: "AWS::IAM::Role"
-      Properties:
-        ManagedPolicyArns:
-          - "arn:aws:iam::aws:policy/AWSXrayWriteOnlyAccess"
-          - "arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole"
-        AssumeRolePolicyDocument:
-          Version: "2012-10-17"
-          Statement:
-            - Sid: "AllowLambdaServiceToAssumeRole"
-              Effect: "Allow"
-              Action:
-                - "sts:AssumeRole"
-              Principal:
-                Service:
-                  - "lambda.amazonaws.com"
+  #### CloudWatch Alarms
+  # All alarms notify the PlagiarismTopic (email subscription)
 
-  IncidentsTableAccessRole:
-    Type: "AWS::IAM::Role"
+  # One Errors alarm per Lambda function
+  ScheduleExamFunctionErrorsAlarm:
+    Type: AWS::CloudWatch::Alarm
     Properties:
-      ManagedPolicyArns:
-        - "arn:aws:iam::aws:policy/AWSXrayWriteOnlyAccess"
-        - "arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole"
-      AssumeRolePolicyDocument:
-        Version: "2012-10-17"
-        Statement:
-          - Sid: "AllowLambdaServiceToAssumeRole"
-            Effect: "Allow"
-            Action:
-              - "sts:AssumeRole"
-            Principal:
-              Service:
-                - "lambda.amazonaws.com"
-      Policies:
-        - PolicyName: "AllowCRUDOperationsOnDynamoDB"
-          PolicyDocument:
-            Version: '2012-10-17'
-            Statement:
-              - Effect: "Allow"
-                Action:
-                  - 'dynamodb:GetItem'
-                  - 'dynamodb:DeleteItem'
-                  - 'dynamodb:DescribeTable'
-                  - 'dynamodb:PutItem'
-                  - 'dynamodb:Scan'
-                  - 'dynamodb:Query'
-                  - 'dynamodb:UpdateItem'
-                  - 'dynamodb:BatchWriteItem'
-                  - 'dynamodb:BatchGetItem'
-                Resource:
-                  - !Sub ${PlagiarismIncidentsTable.Arn}
-        - PolicyName: "AllowStatesActions"
-          PolicyDocument:
-            Version: '2012-10-17'
-            Statement:
-              - Effect: "Allow"
-                Action:
-                  - 'states:SendTaskSuccess'
-                  - 'states:SendTaskFailure'
-                  - 'states:SendTaskHeartbeat'
-                Resource:
-                  - "*"
+      AlarmDescription: Plagiarism - ScheduleExam Lambda function reported errors
+      Namespace: AWS/Lambda
+      MetricName: Errors
+      Dimensions:
+        - Name: FunctionName
+          Value: !Ref ScheduleExamFunction
+      Statistic: Sum
+      Period: 300
+      EvaluationPeriods: 1
+      Threshold: 1
+      ComparisonOperator: GreaterThanOrEqualToThreshold
+      TreatMissingData: notBreaching
+      AlarmActions:
+        - !Ref PlagiarismTopic
+
+  ResolveIncidentFunctionErrorsAlarm:
+    Type: AWS::CloudWatch::Alarm
+    Properties:
+      AlarmDescription: Plagiarism - ResolveIncident Lambda function reported errors
+      Namespace: AWS/Lambda
+      MetricName: Errors
+      Dimensions:
+        - Name: FunctionName
+          Value: !Ref ResolveIncidentFunction
+      Statistic: Sum
+      Period: 300
+      EvaluationPeriods: 1
+      Threshold: 1
+      ComparisonOperator: GreaterThanOrEqualToThreshold
+      TreatMissingData: notBreaching
+      AlarmActions:
+        - !Ref PlagiarismTopic
+
+  TakeAdministrativeActionFunctionErrorsAlarm:
+    Type: AWS::CloudWatch::Alarm
+    Properties:
+      AlarmDescription: Plagiarism - TakeAdministrativeAction Lambda function reported errors
+      Namespace: AWS/Lambda
+      MetricName: Errors
+      Dimensions:
+        - Name: FunctionName
+          Value: !Ref TakeAdministrativeActionFunction
+      Statistic: Sum
+      Period: 300
+      EvaluationPeriods: 1
+      Threshold: 1
+      ComparisonOperator: GreaterThanOrEqualToThreshold
+      TreatMissingData: notBreaching
+      AlarmActions:
+        - !Ref PlagiarismTopic
+
+  SubmitExamResultsFunctionErrorsAlarm:
+    Type: AWS::CloudWatch::Alarm
+    Properties:
+      AlarmDescription: Plagiarism - SubmitExamResults Lambda function reported errors
+      Namespace: AWS/Lambda
+      MetricName: Errors
+      Dimensions:
+        - Name: FunctionName
+          Value: !Ref SubmitExamResultsFunction
+      Statistic: Sum
+      Period: 300
+      EvaluationPeriods: 1
+      Threshold: 1
+      ComparisonOperator: GreaterThanOrEqualToThreshold
+      TreatMissingData: notBreaching
+      AlarmActions:
+        - !Ref PlagiarismTopic
+
+  Api5XXErrorAlarm:
+    Type: AWS::CloudWatch::Alarm
+    Properties:
+      AlarmDescription: Plagiarism - API Gateway returned 5XX errors
+      Namespace: AWS/ApiGateway
+      MetricName: 5XXError
+      Dimensions:
+        - Name: ApiName
+          Value: !Sub "Plagiarism-API-${Stage}"
+        - Name: Stage
+          Value: !Ref Stage
+      Statistic: Sum
+      Period: 300
+      EvaluationPeriods: 1
+      Threshold: 1
+      ComparisonOperator: GreaterThanOrEqualToThreshold
+      TreatMissingData: notBreaching
+      AlarmActions:
+        - !Ref PlagiarismTopic
+
+  StateMachineExecutionsFailedAlarm:
+    Type: AWS::CloudWatch::Alarm
+    Properties:
+      AlarmDescription: Plagiarism - state machine execution failed
+      Namespace: AWS/States
+      MetricName: ExecutionsFailed
+      Dimensions:
+        - Name: StateMachineArn
+          Value: !Ref PlagiarismStateMachine
+      Statistic: Sum
+      Period: 300
+      EvaluationPeriods: 1
+      Threshold: 1
+      ComparisonOperator: GreaterThanOrEqualToThreshold
+      TreatMissingData: notBreaching
+      AlarmActions:
+        - !Ref PlagiarismTopic
+
+  StateMachineExecutionsTimedOutAlarm:
+    Type: AWS::CloudWatch::Alarm
+    Properties:
+      AlarmDescription: Plagiarism - state machine execution timed out
+      Namespace: AWS/States
+      MetricName: ExecutionsTimedOut
+      Dimensions:
+        - Name: StateMachineArn
+          Value: !Ref PlagiarismStateMachine
+      Statistic: Sum
+      Period: 300
+      EvaluationPeriods: 1
+      Threshold: 1
+      ComparisonOperator: GreaterThanOrEqualToThreshold
+      TreatMissingData: notBreaching
+      AlarmActions:
+        - !Ref PlagiarismTopic
+
 Outputs:
 
   ApiEndpointRegisterIncident:  

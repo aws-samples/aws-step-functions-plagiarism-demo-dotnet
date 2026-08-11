@@ -4,6 +4,14 @@ info:
   title: "PlagiarismApi"
   version: "1.0"
   description: "Plagiarism API allows students to submit their exams and lecturers to report plagiarism incidents."
+x-amazon-apigateway-request-validators:
+  ValidateBody:
+    validateRequestBody: true
+    validateRequestParameters: false
+x-amazon-apigateway-gateway-responses:
+  DEFAULT_4XX:
+    responseParameters:
+      gatewayresponse.header.Access-Control-Allow-Origin: "'*'"
 paths:
   /exam:
     post:
@@ -62,6 +70,13 @@ paths:
         passthroughBehavior: "when_no_match"
   /incident:
     post:
+      x-amazon-apigateway-request-validator: ValidateBody
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/IncidentRequest"
       responses:
         "200":
           description: "200 response"
@@ -124,3 +139,16 @@ components:
     Empty:
       title: "Empty Schema"
       type: "object"
+    IncidentRequest:
+      title: "IncidentRequest"
+      type: "object"
+      required:
+        - StudentId
+        - IncidentDate
+      properties:
+        StudentId:
+          type: "string"
+          minLength: 1
+        IncidentDate:
+          type: "string"
+          minLength: 1
