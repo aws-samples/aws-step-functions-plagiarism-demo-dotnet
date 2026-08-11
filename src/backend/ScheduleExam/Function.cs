@@ -3,6 +3,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Threading.Tasks;
 using Amazon.DynamoDBv2;
 using Amazon.Lambda.Core;
 using AWS.Lambda.Powertools.Logging;
@@ -35,14 +36,14 @@ public class Function
         _incidentRepository = incidentRepository;
     }
 
-    [Logging(LogEvent = true)]
+    [Logging]
     [Tracing(CaptureMode = TracingCaptureMode.ResponseAndError)]
     [Metrics(CaptureColdStart = true)]
-    public Incident FunctionHandler(Incident incident, ILambdaContext context)
+    public async Task<Incident> FunctionHandler(Incident incident, ILambdaContext context)
     {
         ValidateIncident(incident);
 
-        var existingIncident = _incidentRepository.GetIncidentById(incident.IncidentId)
+        var existingIncident = await _incidentRepository.GetIncidentByIdAsync(incident.IncidentId)
             ?? throw new InvalidOperationException($"Incident with ID {incident.IncidentId} not found.");
 
         Logger.LogInformation("Scheduling exam for incident {IncidentId}", existingIncident.IncidentId);
@@ -54,9 +55,9 @@ public class Function
         }
 
         existingIncident.Exams ??= new List<Exam>();
-        existingIncident.Exams.Insert(0, new Exam(Guid.NewGuid(), DateTime.Now.AddDays(7), 0));
+        existingIncident.Exams.Insert(0, new Exam(Guid.NewGuid(), DateTime.UtcNow.AddDays(7), 0));
 
-        _incidentRepository.SaveIncident(existingIncident);
+        await _incidentRepository.SaveIncidentAsync(existingIncident);
         Logger.LogInformation("Exam for incident {IncidentId} scheduled.", existingIncident.IncidentId);
         return existingIncident;
     }

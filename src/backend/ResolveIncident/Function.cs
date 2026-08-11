@@ -2,6 +2,7 @@
 // SPDX-License-Identifier: MIT-0
 
 using System;
+using System.Threading.Tasks;
 using Amazon.Lambda.Core;
 using Plagiarism;
 using PlagiarismRepository;
@@ -52,21 +53,21 @@ public class Function
     /// <param name="incident">Instance of an Incident</param>
     /// <param name="context">AWS Lambda context</param>
     /// <returns></returns>
-    [Logging(LogEvent = true)]
+    [Logging]
     [Tracing(CaptureMode = TracingCaptureMode.ResponseAndError)]
     [Metrics(CaptureColdStart = true)]
-    public void FunctionHandler(Incident incident, ILambdaContext context)
+    public async Task FunctionHandler(Incident incident, ILambdaContext context)
     {
-        SaveIncident(incident);
+        await SaveIncidentAsync(incident);
     }
 
     [Tracing(SegmentName = "Saving incident")]
-    private void SaveIncident(Incident incident)
+    private async Task SaveIncidentAsync(Incident incident)
     {
         incident.AdminActionRequired = false;
         incident.IncidentResolved = true;
-        incident.ResolutionDate = DateTime.Now;
+        incident.ResolutionDate = DateTime.UtcNow;
 
-        _incidentRepository.SaveIncident(incident);
+        await _incidentRepository.SaveIncidentAsync(incident);
     }
 }

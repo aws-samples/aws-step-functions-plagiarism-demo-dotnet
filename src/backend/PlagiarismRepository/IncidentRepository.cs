@@ -2,6 +2,7 @@
 // SPDX-License-Identifier: MIT-0
 
 using System;
+using System.Threading.Tasks;
 using Amazon;
 using Amazon.DynamoDBv2;
 using Amazon.DynamoDBv2.DataModel;
@@ -28,12 +29,10 @@ public class IncidentRepository : IIncidentRepository
                 new Amazon.Util.TypeMapping(typeof(Incident), tableName);
         }
 
-        var config = new DynamoDBContextConfig
-        {
-            Conversion = DynamoDBEntryConversion.V2
-        };
-        
-        _dynamoDbContext = new DynamoDBContext(new AmazonDynamoDBClient(), config);
+        _dynamoDbContext = new DynamoDBContextBuilder()
+            .WithDynamoDBClient(() => new AmazonDynamoDBClient())
+            .ConfigureContext(config => config.Conversion = DynamoDBEntryConversion.V2)
+            .Build();
     }
 
     /// <summary>
@@ -50,17 +49,16 @@ public class IncidentRepository : IIncidentRepository
                 new Amazon.Util.TypeMapping(typeof(Incident), tableName);
         }
 
-        var config = new DynamoDBContextConfig
-        {
-            Conversion = DynamoDBEntryConversion.V2
-        };
-        _dynamoDbContext = new DynamoDBContext(ddbClient, config);
+        _dynamoDbContext = new DynamoDBContextBuilder()
+            .WithDynamoDBClient(() => ddbClient)
+            .ConfigureContext(config => config.Conversion = DynamoDBEntryConversion.V2)
+            .Build();
     }
 
-    public Incident GetIncidentById(Guid incidentId)
+    public async Task<Incident> GetIncidentByIdAsync(Guid incidentId)
     {
-        Logger.LogInformation("Getting {incidentId}", incidentId);
-        var incident = _dynamoDbContext.LoadAsync<Incident>(incidentId).Result;
+        Logger.LogInformation("Getting {IncidentId}", incidentId);
+        var incident = await _dynamoDbContext.LoadAsync<Incident>(incidentId);
         Logger.LogInformation($"Found Incident: {incident != null}");
 
         if (incident == null)
@@ -72,22 +70,22 @@ public class IncidentRepository : IIncidentRepository
     }
 
     /// <summary>
-    /// 
+    /// Saves or updates an incident.
     /// </summary>
     /// <param name="incident"></param>
-    /// <returns>Instance of State </returns>
-    public Incident SaveIncident(Incident incident)
+    /// <returns>The saved incident</returns>
+    public async Task<Incident> SaveIncidentAsync(Incident incident)
     {
         try
         {
             Logger.LogInformation($"Saving incident with id {incident.IncidentId}");
-            
-            _dynamoDbContext.SaveAsync(incident).Wait();
+
+            await _dynamoDbContext.SaveAsync(incident);
             return incident;
         }
         catch (AmazonDynamoDBException e)
         {
-            Logger.LogInformation(e);
+            Logger.LogError(e);
             throw;
         }
     }

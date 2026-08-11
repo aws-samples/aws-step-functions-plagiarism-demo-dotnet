@@ -1,8 +1,7 @@
-﻿using Xunit;
+using Xunit;
 using NSubstitute;
 using Plagiarism;
 using PlagiarismRepository;
-using ScheduleExam;
 
 namespace ScheduleExam.Tests
 {
@@ -21,37 +20,37 @@ namespace ScheduleExam.Tests
         }
 
         [Fact]
-        public void FunctionHandler_ValidIncident_SchedulesExam()
+        public async Task FunctionHandler_ValidIncident_SchedulesExam()
         {
             // Arrange
             var incidentId = Guid.NewGuid();
             var incident = new Incident { IncidentId = incidentId };
             var existingIncident = new Incident { IncidentId = incidentId, Exams = new List<Exam>() };
-            _repository.GetIncidentById(incident.IncidentId).Returns(existingIncident);
+            _repository.GetIncidentByIdAsync(incident.IncidentId).Returns(existingIncident);
 
             // Act
-            var result = _function.FunctionHandler(incident, null);
+            var result = await _function.FunctionHandler(incident, null);
 
             // Assert
             Assert.Single(result.Exams);
-            Assert.Equal(DateTime.Now.Date.AddDays(7), result.Exams[0].ExamDeadline.Date);
-            _repository.Received(1).SaveIncident(Arg.Any<Incident>());
+            Assert.Equal(DateTime.UtcNow.Date.AddDays(7), result.Exams[0].ExamDeadline.Date);
+            await _repository.Received(1).SaveIncidentAsync(Arg.Any<Incident>());
         }
 
         [Fact]
-        public void FunctionHandler_IncidentNotFound_ThrowsException()
+        public async Task FunctionHandler_IncidentNotFound_ThrowsException()
         {
             // Arrange
             var incidentId = Guid.NewGuid();
             var incident = new Incident { IncidentId = incidentId };
-            _repository.GetIncidentById(incident.IncidentId).Returns((Incident)null);
+            _repository.GetIncidentByIdAsync(incident.IncidentId).Returns((Incident)null);
 
             // Act & Assert
-            Assert.Throws<InvalidOperationException>(() => _function.FunctionHandler(incident, null));
+            await Assert.ThrowsAsync<InvalidOperationException>(() => _function.FunctionHandler(incident, null));
         }
 
         [Fact]
-        public void FunctionHandler_ThreeExamsAlreadyTaken_ThrowsException()
+        public async Task FunctionHandler_ThreeExamsAlreadyTaken_ThrowsException()
         {
             // Arrange
             var incidentId = Guid.NewGuid();
@@ -61,27 +60,27 @@ namespace ScheduleExam.Tests
                 IncidentId = incidentId, 
                 Exams = new List<Exam> { new Exam(), new Exam(), new Exam() }
             };
-            _repository.GetIncidentById(incident.IncidentId).Returns(existingIncident);
+            _repository.GetIncidentByIdAsync(incident.IncidentId).Returns(existingIncident);
 
             // Act & Assert
-            Assert.Throws<StudentExceededAllowableExamRetries>(() => _function.FunctionHandler(incident, null));
+            await Assert.ThrowsAsync<StudentExceededAllowableExamRetries>(() => _function.FunctionHandler(incident, null));
         }
 
         [Fact]
-        public void FunctionHandler_NullIncident_ThrowsArgumentNullException()
+        public async Task FunctionHandler_NullIncident_ThrowsArgumentNullException()
         {
             // Act & Assert
-            Assert.Throws<ArgumentNullException>(() => _function.FunctionHandler(null, null));
+            await Assert.ThrowsAsync<ArgumentNullException>(() => _function.FunctionHandler(null, null));
         }
 
         [Fact]
-        public void FunctionHandler_EmptyIncidentId_ThrowsArgumentException()
+        public async Task FunctionHandler_EmptyIncidentId_ThrowsArgumentException()
         {
             // Arrange
             var incident = new Incident { IncidentId = Guid.Empty };
 
             // Act & Assert
-            Assert.Throws<ArgumentException>(() => _function.FunctionHandler(incident, null));
+            await Assert.ThrowsAsync<ArgumentException>(() => _function.FunctionHandler(incident, null));
         }
     }
 }

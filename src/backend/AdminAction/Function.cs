@@ -2,6 +2,7 @@
 // SPDX-License-Identifier: MIT-0
 
 using System;
+using System.Threading.Tasks;
 using Amazon.Lambda.Core;
 using AWS.Lambda.Powertools.Logging;
 using AWS.Lambda.Powertools.Metrics;
@@ -36,21 +37,21 @@ public class Function
     /// <param name="incident">Instance of Incident class</param>
     /// <param name="context">AWS Lambda context</param>
     /// <returns></returns>
-    [Logging(LogEvent = true)]
+    [Logging]
     [Tracing(CaptureMode = TracingCaptureMode.ResponseAndError)]
     [Metrics(CaptureColdStart = true)]
-    public void FunctionHandler(Incident incident, ILambdaContext context)
+    public async Task FunctionHandler(Incident incident, ILambdaContext context)
     {
         incident.AdminActionRequired = true;
         incident.IncidentResolved = false;
-        incident.ResolutionDate = DateTime.Now;
+        incident.ResolutionDate = DateTime.UtcNow;
 
-        SaveIncident(incident);
+        await SaveIncidentAsync(incident);
     }
 
     [Tracing(SegmentName = "Save incident")]
-    protected virtual void SaveIncident(Incident incident)
+    protected virtual async Task SaveIncidentAsync(Incident incident)
     {
-        _incidentRepository.SaveIncident(incident);
+        await _incidentRepository.SaveIncidentAsync(incident);
     }
 }

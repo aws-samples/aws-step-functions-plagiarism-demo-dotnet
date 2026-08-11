@@ -3,6 +3,7 @@
 
 using System;
 using System.Collections.Generic;
+using Amazon.DynamoDBv2.DataModel;
 
 namespace Plagiarism;
 
@@ -30,6 +31,10 @@ public class Incident
     }
     
     public string StudentId { get; set; }
+
+    // Hash key must be declared explicitly: the AWS SDK v4 DynamoDBContext no
+    // longer fetches table metadata (DescribeTable) by default.
+    [DynamoDBHashKey]
     public Guid IncidentId { get; set; }
     public DateTime IncidentDate { get; set; }
     public List<Exam> Exams { get; set; }
@@ -50,21 +55,21 @@ public class Exam
     public DateTime ExamDeadline { get; set; }
     public int Score { get; set; }
 
+    /// <summary>
+    /// Minimum score required to pass the exam.
+    /// </summary>
+    public const int PassMark = 67;
+
     public ExamResult Result
     {
         get
         {
-            if (Score >= 76)
+            if (Score >= PassMark)
             {
                 return _examResult = ExamResult.Pass;
             }
 
-            if (Score >= 1 & Score < 76)
-            {
-                return _examResult = ExamResult.Fail;
-            }
-
-            return _examResult = ExamResult.DidNotSitExam;
+            return _examResult = ExamResult.Fail;
         }
 
         set => _examResult = value;

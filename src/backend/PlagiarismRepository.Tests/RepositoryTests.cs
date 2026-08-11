@@ -67,7 +67,7 @@ public class RepositoryTests
     }
 
     [Fact]
-    public void SaveIncidentAsync()
+    public async Task SaveIncidentAsync()
     {
         _incidentRepository = new IncidentRepository(_dynamoDbClient, _tableName);
 
@@ -79,13 +79,13 @@ public class RepositoryTests
             ResolutionDate = null
         };
 
-        var incident = _incidentRepository.SaveIncident(newIncident);
+        var incident = await _incidentRepository.SaveIncidentAsync(newIncident);
 
         Assert.NotNull(incident);
     }
 
     [Fact]
-    public void UpdateIncidentAsync()
+    public async Task UpdateIncidentAsync()
     {
         _incidentRepository = new IncidentRepository(_dynamoDbClient, _tableName);
 
@@ -96,26 +96,18 @@ public class RepositoryTests
             IncidentDate = new DateTime(2018, 02, 03),
             ResolutionDate = null
         };
-        // state.Exams = new List<Exam>
-        // {
-        //     new(Guid.NewGuid(), new DateTime(2018, 02, 17), 0),
-        //     new(Guid.NewGuid(), new DateTime(2018, 02, 10), 65)
-        // };
 
-        var incident = _incidentRepository.SaveIncident(state);
+        var incident = await _incidentRepository.SaveIncidentAsync(state);
 
-        //incident.Exams.Add(new(Guid.NewGuid(), new DateTime(2018, 02, 17), 99));
-
-        var updatedIncident = _incidentRepository.SaveIncident(state);
+        var updatedIncident = await _incidentRepository.SaveIncidentAsync(state);
 
         Assert.NotNull(incident);
         Assert.NotNull(updatedIncident);
-        // Assert.True(updatedIncident.Exams.Count == 3, "Should be three");
     }
 
 
     [Fact]
-    public void FindIncidentAsync()
+    public async Task FindIncidentAsync()
     {
         _incidentRepository = new IncidentRepository(_dynamoDbClient, _tableName);
 
@@ -129,9 +121,9 @@ public class RepositoryTests
             ResolutionDate = DateTime.Now
         };
 
-        var incident = _incidentRepository.SaveIncident(state);
+        var incident = await _incidentRepository.SaveIncidentAsync(state);
 
-        var newIncident = _incidentRepository.GetIncidentById(incident.IncidentId);
+        var newIncident = await _incidentRepository.GetIncidentByIdAsync(incident.IncidentId);
 
         Assert.NotNull(newIncident);
         Assert.True(newIncident.IncidentId == incident.IncidentId, "Should be the same incident");

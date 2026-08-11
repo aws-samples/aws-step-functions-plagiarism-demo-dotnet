@@ -24,7 +24,7 @@ public class FunctionTests
     }
 
     [Fact]
-    public void ResolveIncidentFunctionTest()
+    public async Task ResolveIncidentFunctionTest()
     {
         var mockIncidentRepository
             = Substitute.For<IIncidentRepository>();
@@ -45,12 +45,12 @@ public class FunctionTests
         state.ResolutionDate = null;
 
         // Call function with mock repository
-        function.FunctionHandler(state, context);
+        await function.FunctionHandler(state, context);
 
         // assert the call to incident repository had state with Resolution date not set to null
-        mockIncidentRepository.Received().SaveIncident(Arg.Is<Incident>(i => i.ResolutionDate != null));
-        mockIncidentRepository.Received().SaveIncident(Arg.Is<Incident>(i => i.IncidentResolved == false));
-        mockIncidentRepository.Received().SaveIncident(Arg.Is<Incident>(i => i.AdminActionRequired == true));
+        await mockIncidentRepository.Received().SaveIncidentAsync(Arg.Is<Incident>(i => i.ResolutionDate != null));
+        await mockIncidentRepository.Received().SaveIncidentAsync(Arg.Is<Incident>(i => i.IncidentResolved == false));
+        await mockIncidentRepository.Received().SaveIncidentAsync(Arg.Is<Incident>(i => i.AdminActionRequired == true));
 
         _testOutputHelper.WriteLine("Success");
     }
