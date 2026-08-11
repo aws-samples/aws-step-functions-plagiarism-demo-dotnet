@@ -6,26 +6,26 @@
     "dev": "next dev",
     "build": "next build",
     "start": "serve out",
-    "lint": "next lint",
+    "lint": "eslint src",
     "deploy": "amplify push"
   },
   "dependencies": {
-    "@aws-amplify/cli": "^12.12.6",
-    "bootstrap": "^5.3.3",
+    "@aws-amplify/cli": "^14.5.1",
+    "bootstrap": "^5.3.8",
     "bulma": "^0.9.4",
-    "next": "14.2.13",
-    "react": "^18.3.1",
-    "react-dom": "^18.3.1",
-    "sass": "^1.79.3",
-    "serve": "^14.2.3"
+    "next": "16.3.0",
+    "react": "^19.2.8",
+    "react-dom": "^19.2.8",
+    "sass": "^1.102.0",
+    "serve": "^14.2.6"
   },
   "devDependencies": {
-    "@types/node": "^20.16.5",
-    "@types/react": "^18.3.8",
-    "@types/react-dom": "^18.3.0",
-    "eslint": "^8.57.1",
-    "eslint-config-next": "14.0.3",
-    "typescript": "^5.6.2"
+    "@types/node": "^26.2.0",
+    "@types/react": "^19.2.18",
+    "@types/react-dom": "^19.2.4",
+    "eslint": "^9.39.5",
+    "eslint-config-next": "16.3.0",
+    "typescript": "^6.0.3"
   },
   "packageManager": "pnpm@9.1.1+sha512.14e915759c11f77eac07faba4d019c193ec8637229e62ec99eefb7cf3c3b75c64447882b7c485142451ee3a6b408059cdfb7b7fa0341b975f12d0f7629c71195"
 }

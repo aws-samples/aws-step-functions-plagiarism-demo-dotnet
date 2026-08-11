@@ -7,6 +7,7 @@ import { Incident, createIncident } from '@/api/api';
 
 export default function AdminPage({ }) {
     const [showMessage, setShowMessage] = useState(false);
+    const [errorMessage, setErrorMessage] = useState<string | undefined>(undefined);
     const [executionArn, setExecutionArn] = useState<string | undefined>(undefined);
     const [executionStartDate, setExecutionStartDate] = useState<string | undefined>(undefined);
     const [submittedStudentId, setSubmittedStudentId] = useState<string | undefined>(undefined);
@@ -25,11 +26,18 @@ export default function AdminPage({ }) {
     async function incidentFormSubmitted(e: FormEvent) {
         e.preventDefault();
         if(!studentIdInputRef?.current || !incidentDateInputRef?.current) return;
-        const {executionArn: incidentExecutionArn, startDate: incidentStartDate} = await createIncident({StudentId: studentIdInputRef.current.value, IncidentDate: incidentDateInputRef.current.value});
-        setSubmittedStudentId(studentIdInputRef.current.value);
-        setExecutionArn(incidentExecutionArn);
-        setExecutionStartDate(incidentStartDate);
-        setShowMessage(true);
+        setErrorMessage(undefined);
+        try {
+            const {executionArn: incidentExecutionArn, startDate: incidentStartDate} = await createIncident({StudentId: studentIdInputRef.current.value, IncidentDate: incidentDateInputRef.current.value});
+            setSubmittedStudentId(studentIdInputRef.current.value);
+            setExecutionArn(incidentExecutionArn);
+            setExecutionStartDate(incidentStartDate);
+            setShowMessage(true);
+        } catch (error) {
+            setShowMessage(false);
+            setErrorMessage(error instanceof Error ? error.message : 'An unexpected error occurred while creating the incident.');
+            console.error('Error creating incident:', error);
+        }
     }
 
 
@@ -67,13 +75,18 @@ export default function AdminPage({ }) {
                         </div>
                     </div>
                     <div>
+                        {errorMessage && (
+                            <div className="alert alert-danger" role="alert">
+                                {errorMessage}
+                            </div>
+                        )}
                         {showMessage && (
                             <>
                                 <div className="alert alert-success" role="alert" v-show="showMessage">
                                     Created new incident for Student ID: {submittedStudentId}<br />
                                 </div>
                                 <div className="alert alert-info small" role="alert" v-show="showMessage">
-                                    <strong>Execution ARN:</strong> <a href={'https://ap-southeast-2.console.aws.amazon.com/states/home?region=ap-southeast-2#/executions/details/' + executionArn}>{executionArn}</a><br />
+                                    <strong>Execution ARN:</strong> <a href={`https://${executionArn?.split(':')[3]}.console.aws.amazon.com/states/home?region=${executionArn?.split(':')[3]}#/executions/details/${executionArn}`}>{executionArn}</a><br />
                                     <strong>Start Date:</strong> {executionStartDate}
                                 </div>
                             </>
@@ -89,9 +102,9 @@ export default function AdminPage({ }) {
                                 to test their knowledge of the universities referencing standard. Students get three attempts to pass the exam
                                 before administrative action is taken.</p>
 
-                            <p>This demo uses exposes an <a href="https://aws.amazon.com/step-functions/">AWS Step Function</a>  via an <a href="https://aws.amazon.com/api-gateway/">Amazon API Gateway</a>. The step-function definition invokes
+                            <p>This demo exposes an <a href="https://aws.amazon.com/step-functions/">AWS Step Function</a>  via an <a href="https://aws.amazon.com/api-gateway/">Amazon API Gateway</a>. The step-function definition invokes
                                 tasks via <a href="https://aws.amazon.com/lambda/">AWS Lambda</a>, that store results in <a href="https://aws.amazon.com/dynamodb">Amazon DynamoDB</a>. Notifications are implemented
-                                via <a href="https://aws.amazon.com/dynamodb">Amazon SNS</a> and <a href="https://aws.amazon.com/xray/">AWS X-Ray</a> provides distributed tracing capability.</p>
+                                via <a href="https://aws.amazon.com/sns/">Amazon SNS</a> and <a href="https://aws.amazon.com/xray/">AWS X-Ray</a> provides distributed tracing capability.</p>
                         </div>
                     </div>
                     <img src="/images/stepfunction.png" className="img-fluid pt-5" alt="state-machine" />

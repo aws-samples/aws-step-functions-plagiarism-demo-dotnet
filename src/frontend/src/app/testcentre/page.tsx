@@ -1,7 +1,7 @@
 'use client'
 
 import Exam from '@/app/testcentre/components/Exam'
-import { useState } from 'react'
+import { Suspense, useState } from 'react'
 import ExamIntegration from './components/ExamIntegration'
 
 
@@ -22,7 +22,9 @@ export default function ExamPage() {
         <div className="container">
           <div id="app">
               <Exam examSubmitted={examSubmitted} score={score} setScore={setScore}/>
-              <ExamIntegration score={score} setExamSubmitted={setExamSubmitted}/>
+              <Suspense fallback={null}>
+                <ExamIntegration score={score} setExamSubmitted={setExamSubmitted}/>
+              </Suspense>
           </div>
         </div>
     </section>

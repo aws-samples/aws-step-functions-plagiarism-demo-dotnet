@@ -12,11 +12,17 @@ export interface ExamData {
 }
 
 export async function submitExam(examData: ExamData) {
-    console.log(process.env);
-    console.log(API_ENDPOINT);
-    const response = await fetch(`${API_ENDPOINT}/exam`, { method: 'POST', mode: 'cors', body: JSON.stringify(examData) });
-    if (!response.ok) throw (response);
-    return await response.json();
+    const response = await fetch(`${API_ENDPOINT}/exam`, {
+        method: 'POST',
+        mode: 'cors',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(examData)
+    });
+    const body = await response.json().catch(() => ({}));
+    if (!response.ok) {
+        throw new Error(body.message || `Submitting the exam failed with status ${response.status}.`);
+    }
+    return body;
 }
 
 export interface Incident {
@@ -31,7 +37,11 @@ export interface StepFunctionInfo {
 
 export async function createIncident(incidentData: Incident): Promise<StepFunctionInfo> {
     const response = await fetch(`${API_ENDPOINT}/incident`, { method: 'POST', mode: 'cors', headers: { "Content-Type": "application/json" }, body: JSON.stringify(incidentData) });
-    const { executionArn, startDate } = await response.json();
+    const body = await response.json().catch(() => ({}));
+    if (!response.ok) {
+        throw new Error(body.message || `Creating the incident failed with status ${response.status}.`);
+    }
+    const { executionArn, startDate } = body;
     return { executionArn, startDate };
 }
 

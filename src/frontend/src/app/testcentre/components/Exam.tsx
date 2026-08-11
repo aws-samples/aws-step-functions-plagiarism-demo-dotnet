@@ -1,7 +1,7 @@
 'use client'
 
 import { FormEvent, useState } from 'react'
-import QuestionData from './QuestionData.json'
+import QuestionData from './questionData.json'
 import Question from './Question'
 
 type ExamProps = {

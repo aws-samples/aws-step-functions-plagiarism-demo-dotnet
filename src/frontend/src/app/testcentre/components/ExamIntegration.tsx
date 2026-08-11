@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useState } from 'react'
 import { ExamData, submitExam } from '@/api/api'
 import { useSearchParams } from 'next/navigation';
 
@@ -10,48 +10,36 @@ type ExamIntegrationProps = {
 }
 
 export default function ExamIntegration({ score, setExamSubmitted }: ExamIntegrationProps) {
-    const [examData, setExamData] = useState<ExamData>({
-        // Exam score (out of 100).
-        Score: score,
-        // Unique identifier for plagiarism incident.
-        IncidentId: 'Not supplied',
-        // Unique identifier for exam attempt.
-        ExamId: 'Not supplied',
-        // Task Token unique to the current Step Functions execution.
-        TaskToken: 'Not supplied'
-    });
     const [isSubmitSuccessful, setIsSubmitSuccessful] = useState(false);
     const [submitMessage, setSubmitMessage] = useState('');
 
     const params = useSearchParams();
 
-    useEffect(() => {
-        // If present, get the primary keys, then set our hidden form value.
-        // Keys can get passed as a GET variables,
-        // in the form ?/TaskToken=baz&IncidentId=foo&ExamId=bar
-        const incidentId = params.get('IncidentId') || 'Not supplied';
-        const examId = params.get('ExamId') || 'Not supplied';
-        const taskToken = params.get('TaskToken')?.replaceAll(" ", "+") || 'Not supplied';
-        setExamData((examData) => ({ ...examData, IncidentId: incidentId, ExamId: examId, TaskToken: taskToken }));
-    }, [params]);
-
-    // Add this useEffect to update the score
-    useEffect(() => {
-        setExamData((examData) => ({ ...examData, Score: score }));
-    }, [score]);
+    // Keys are passed as GET variables, in the form
+    // ?TaskToken=baz&IncidentId=foo&ExamId=bar. Derive the exam data
+    // directly from the URL and the current score.
+    const examData: ExamData = {
+        // Exam score (out of 100).
+        Score: score,
+        // Unique identifier for plagiarism incident.
+        IncidentId: params.get('IncidentId') || 'Not supplied',
+        // Unique identifier for exam attempt.
+        ExamId: params.get('ExamId') || 'Not supplied',
+        // Task Token unique to the current Step Functions execution.
+        TaskToken: params.get('TaskToken')?.replaceAll(" ", "+") || 'Not supplied'
+    };
 
     function submitToStepFunctions(event: any) {
         event.preventDefault();
         // Post our response back to Step Functions to continue the flow.
-        submitExam(examData).then(response => {
+        submitExam(examData).then(() => {
             setIsSubmitSuccessful(true);
-            console.log(response);
             setExamSubmitted(true);
             setSubmitMessage('Your exam has been submitted successfully.');
         }).catch(error => {
-            // Something went wrong.
-            setIsSubmitSuccessful(true);
-            setSubmitMessage(error.message || 'Your exam has been submitted successfully, with errors.');
+            // Something went wrong - show the error instead of pretending it worked.
+            setIsSubmitSuccessful(false);
+            setSubmitMessage(error.message || 'An unexpected error occurred while submitting your exam.');
             console.error('Error submitting exam:', error);
         });
     }
